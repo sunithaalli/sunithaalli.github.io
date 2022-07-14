@@ -41,7 +41,7 @@ define([
           const value = obj[key];
           if (Array.isArray(value)) {
             dataObj.icon = 'oj-ux-ico-array';
-            dataType.type = 'array';
+            dataObj.type = 'array';
             dataObj.children = [];
             value.forEach((arrayValue, arrayIndex) => {
               if (! (Array.isArray(arrayValue) || typeof arrayValue === 'object')) {
@@ -58,7 +58,7 @@ define([
             });
           } else if (typeof value === 'object') {
             dataObj.children = convertToArrayData(value, id);
-            dataType.type = 'object';
+            dataObj.type = 'object';
             dataObj.icon = 'oj-ux-ico-brackets';
           } else {
             popuplateBasicDataTypeInfoFromValue(dataObj, value);
