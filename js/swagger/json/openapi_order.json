@@ -1,0 +1,272 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "order_REQUEST",
+        "version": "v01"
+    },
+    "servers": [
+        {
+            "url": "https://localhost:8443/"
+        }
+    ],
+    "paths": {
+        "/endpoints/actions/a3f989b2-a876-4f98-bdc5-517530785d39": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/executeType"
+                            }
+                        }
+                    },
+                    "required": false
+                },
+                "responses": {
+                    "500": {
+                        "description": "Faults",
+                        "content": {}
+                    },
+                    "default": {
+                        "description": "A sample description of the Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/executeResponseType"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codegen-request-body-name": "execute"
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "executeType": {
+                "type": "object",
+                "properties": {
+                    "caasEndpointProperties": {
+                        "type": "object",
+                        "properties": {
+                            "connectivityproperties": {
+                                "title": "Connectivity Properties",
+                                "type": "object",
+                                "properties": {
+                                    "RestAPI": {
+                                        "title": "Rest API",
+                                        "type": "object",
+                                        "properties": {
+                                            "$choice-attrib-1": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "Plugin": {
+                                        "title": "Plugin",
+                                        "type": "object",
+                                        "properties": {
+                                            "PostQueryString": {
+                                                "title": "Post Query String",
+                                                "type": "boolean"
+                                            },
+                                            "UseFormURLEncoding": {
+                                                "title": "Use Form URL Encoding",
+                                                "type": "boolean"
+                                            },
+                                            "EnforceEmptyJSONObjectPayload": {
+                                                "title": "Enforce Empty JSON Object Payload",
+                                                "type": "boolean"
+                                            },
+                                            "EnforceAbsoluteEndpointURI": {
+                                                "title": "Enforce Absolute Endpoint URI",
+                                                "type": "boolean"
+                                            },
+                                            "SkipControlCharacters": {
+                                                "title": "Skip Control Characters",
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "endpointRequest": {
+                        "type": "object",
+                        "properties": {
+                            "request-wrapper": {
+                                "title": "Request Wrapper",
+                                "type": "object",
+                                "properties": {
+                                    "orderName": {
+                                        "title": "Order Name",
+                                        "type": "string"
+                                    },
+                                    "orderId": {
+                                        "title": "orderId",
+                                        "type": "string",
+                                        "pattern": "[0-9]+"
+                                    },
+                                    "orderStatus": {
+                                        "title": "order Status",
+                                        "type": "string"
+                                    },
+                                    "billOfLines": {
+                                        "title": "Bill Lines",
+                                        "type": "array",
+                                        "items": {
+                                            "billLineId": {
+                                                "title": "Bill Line ID",
+                                                "type": "string",
+                                                "pattern": "[0-9]+"
+                                            },
+                                            "totalUsage": {
+                                                "title": "Total Usage",
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "maximum": 10000
+                                            }
+                                        }
+                                    },
+                                    "orderReceipts": {
+                                        "title": "Receipt of Orders",
+                                        "type": "array",
+                                        "items": {
+                                            "receiptLineId": {
+                                                "title": "Rceipt Line ID",
+                                                "type": "string",
+                                                "pattern": "[0-9]+"
+                                            },
+                                            "totalUsage": {
+                                                "title": "Total Usage",
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "maximum": 10000
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "executeResponseType": {
+                "required": [
+                    "ConnectivityProperties",
+                    "response-wrapper"
+                ],
+                "type": "object",
+                "properties": {
+                    "response-wrapper": {
+                        "title": "Response Wrapper",
+                        "type": "object",
+                        "properties": {
+                            "orderId": {
+                                "title": "Order Id",
+                                "type": "string"
+                            },
+                            "BillLines": {
+                                "title": "Bill Lines",
+                                "type": "array",
+                                "items": {
+                                    "BillLinesPUI": {
+                                        "title": "Bill Lines PUI",
+                                        "type": "string"
+                                    },
+                                    "UsageQuantity": {
+                                        "title": "Usage Quantity",
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "ConnectivityProperties": {
+                        "title": "Connectivity Properties",
+                        "type": "object",
+                        "properties": {
+                            "RestAPI": {
+                                "title": "Rest API",
+                                "type": "object",
+                                "properties": {
+                                    "http.response.status": {
+                                        "title": "Http Response Status",
+                                        "minimum": 1,
+                                        "type": "integer"
+                                    },
+                                    "http.response.reason": {
+                                        "title": "Http Response Reason",
+                                        "type": "string"
+                                    },
+                                    "http.target.endpoint.uri": {
+                                        "title": "Http Target Endpoint Uri",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "APIInvocationError": {
+                "required": [
+                    "detail",
+                    "errorCode",
+                    "errorDetails",
+                    "title",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "string"
+                    },
+                    "errorDetails": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "errorCode",
+                                "errorPath",
+                                "instance",
+                                "title",
+                                "type"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "instance": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "errorPath": {
+                                    "type": "string"
+                                },
+                                "errorCode": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "x-original-swagger-version": "2.0"
+}

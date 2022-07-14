@@ -1,0 +1,73 @@
+<div class="oj-flex-item oj-flex oj-sm-flex-direction-column">
+  <oj-bind-if test="[[!schemaMode()]]">
+    <oj-tab-bar data-oj-binding-provider="none" edge="top" selection="{{selectedTabItem}}">
+      <ul>
+        <li id="target-tree">
+          <a href="#" aria-controls="target-tree-tab-panel" id="target-tree-tab">Target Tree</a>
+        </li>
+        <li id="target-ouput">
+          <a href="#" aria-controls="target-ouput-tab-panel" id="target-ouput-tab">Target Payload</a>
+        </li>
+      </ul>
+    </oj-tab-bar>
+
+    <oj-switcher value="[[selectedTabItem]]" class="oj-flex oj-flex-item oj-sm-flex-1">
+      <div slot="target-tree" id="target-tree-tab-panel" class="oj-flex-item oj-sm-flex-1 oj-sm-padding-2x" role="tabpanel" aria-labelledby="target-tree-tab">
+        <oj-tree-view
+          id="source-treeview"
+          data="[[jsonTreeData]]"
+          dnd.drop.items.data-types='["application/targetschemanodes+json"]'
+          expanded="[[treeExpanded]]"
+          aria-label="Tree View with Target Data">
+          <template slot="itemTemplate" data-oj-as="row">
+            <span :class="[['oj-treeview-icon  ' + row.data.icon]]"></span>
+            <span class="oj-treeview-item-text">
+              <oj-bind-text value="[[row.data.title]]"></oj-bind-text>
+            </span>
+            <oj-bind-if test="{{row.data.children}}">
+              <span :class="oj-treeview-icon  oj-ux-ico-plus"></span>
+            </oj-bind-if>
+            
+          </template>
+        </oj-tree-view>
+      </div>
+      <div slot="target-ouput" id="target-ouput-tab-panel" role="tabpanel" class="oj-flex-item oj-flex oj-sm-flex-1" aria-labelledby="target-ouput-tab">
+        <div id="target-shapeless-output-monaco-container" class="oj-flex-item oj-sm-flex-1" >
+        </div>
+      </div>
+    </oj-switcher>
+  </oj-bind-if>
+  <oj-bind-if test="[[schemaMode()]]">
+    <div class="oj-typography-subheading-md oj-sm-margin-2x-start oj-flex">
+      <oj-bind-text value="[[schemaTreeHeader]]"></oj-bind-text>
+      <oj-switch 
+        id="show-target-output-switch"
+        value="{{showTargetOutput}}"
+        class="oj-sm-margin-4x-start">
+      </oj-switch>
+      <oj-label for="show-target-output-switch" class="oj-sm-align-self-center oj-sm-margin-2x-start">Target Output</oj-label>
+      <hr>
+    </div>
+    <div style="max-height: calc(100vh - 150px); overflow: auto;" class="oj-flex-item oj-sm-flex-1 oj-sm-padding-2x" id="target-schema-tree">
+      <oj-bind-if test="[[showTargetOutput()]]">
+        <div id="target-output-monaco-container" class="oj-flex-item oj-sm-flex-1" style="height: 100%;">
+        </div>
+      </oj-bind-if>
+      <oj-bind-if test="[[!showTargetOutput()]]">
+        <oj-tree-view
+          id="target-schema-treeview"
+          data="[[schemaTreeData]]"
+          dnd.drag.items.data-types='["application/targetschemanodes+json"]'
+          dnd.drag.items.drag-start="[[handleDragStart]]"
+          expanded="[[schemaTreeExpanded]]"
+          aria-label="Target Tree View with Schema">
+          <template slot="itemTemplate" data-oj-as="row">
+            <span :class="[['oj-treeview-icon  ' + row.data.icon]]"></span>
+            <span class="oj-treeview-item-text">
+              <oj-bind-text value="[[row.data.title]]"></oj-bind-text>
+            </span>
+          </template>
+        </oj-tree-view>
+      </oj-bind-if>
+  </oj-bind-if>
+</div>  

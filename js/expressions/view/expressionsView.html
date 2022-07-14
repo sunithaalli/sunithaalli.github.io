@@ -1,0 +1,160 @@
+<div class="oj-flex-item oj-flex oj-sm-flex-direction-column">
+  <oj-tab-bar data-oj-binding-provider="none" edge="top" selection="{{selectedTabItem}}">
+    <ul>
+      <li id="expression-list">
+        <a href="#" aria-controls="expression-list-tab-panel" id="expression-list-tab">Expressions</a>
+      </li>
+      <li id="mapping-canvas">
+        <a href="#" aria-controls="mapping-canvas-tab-panel" id="mapping-canvas-tab">Mapping Canvas</a>
+      </li>
+    </ul>
+  </oj-tab-bar>
+  <oj-switcher value="[[selectedTabItem]]" class="oj-flex oj-flex-item oj-sm-flex-1">
+    <div slot="expression-list" id="expression-list-tab-panel" class="oj-sm-flex-1 oj-flex oj-sm-flex-direction-column" role="tabpanel" aria-labelledby="expression-list-tab">
+      <div class="oj-sm-margin-4x-vertical"> 
+        <oj-label for="show-source-payload-switch" class="oj-sm-align-self-center oj-sm-margin-2x-start oj-typography-subheading-md oj-text-primary-color">
+          <oj-bind-text value="[[rootNode]]"></oj-bind-text> 
+        </oj-label>
+        <hr></hr>
+      </div>
+      <oj-tree-view
+        id="expression-tree-view"
+        aria-label="Expressions Tree View"
+        data="[[expressionsDataProvider]]"
+        expanded="{{expanded}}"
+        dnd.drop.items.data-types='["application/targetschemanodes+json"]'
+        dnd.drop.items.drop="[[handleDrop]]"
+        dnd.drop.items.drag-over="[[handleDragOver]]"
+        class="oj-sm-width-full">
+
+        <template slot="itemTemplate" data-oj-as="row">
+          <div class="oj-flex oj-sm-flex-1 oj-sm-align-items-center oj-border-bottom" :data-row-id="[[row.data.id]]">
+            <div class="oj-flex-item oj-sm-flex-0">
+              <span class="oj-treeview-item-text">
+                <oj-bind-text value="[[row.data.name]]"></oj-bind-text>
+              </span>
+            </div>
+            <div class="oj-flex-item oj-flex oj-sm-flex-1 oj-sm-margin-4x-start">
+              <div style="overflow: auto;">
+                <div class="oj-icon-color-info" :id="[['rowExpressionText' + row.data.id]]">
+                  <oj-bind-text value="[[row.data.expression]]"></oj-bind-text>
+                </div>
+              </div>
+            </div>
+            <div class="oj-flex-item oj-sm-flex-wrap-nowrap oj-helper-margin-start-auto" style="flex:none">
+              <oj-toolbar data-oj-clickthrough="disabled" chroming="borderless" class="oj-sm-padding-0-vertical">
+                <oj-button id="editExpression" value="edit" class="oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
+                  <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                </oj-button>
+                <oj-button id="addExpression" value="add" class="oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
+                  <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                </oj-button>
+                <oj-button id="deleteExpression" value="delete" class="oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
+                  <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                </oj-button>
+                <oj-popup
+                  id="addExpressionItemPopup"
+                  auto-dismiss="none"
+                  tail="simple"
+                  position='{"at": {"horizontal": "start", "vertical": "center"},"my": {"horizontal": "end","vertical": "center"}}'
+                  modality="modeless">
+                  <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-align-items-center">
+                    <oj-input-text class="oj-flex-item"
+                    value="{{newExpressionItemName}}"
+                    label-hint="Node Name"
+                    label-edge="inside">
+                    </oj-input-text>
+                    <oj-button id="addExpressionOK"  class="oj-flex-item oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
+                      <span slot="startIcon" class="oj-ux-ico-check"></span>
+                    </oj-button>
+                  </div>
+                </oj-popup>
+              </oj-toolbar>
+            </div>
+          </div>
+        </template>
+        <oj-popup
+          id="validationErrorPopup"
+          auto-dismiss="none"
+          modality="modeless"
+          position.at.horizontal="start"
+          position.at.vertical="bottom"
+          position.my.horizontal="start"
+          position.my.vertical="top"
+          tail="simple">
+          <div class="oj-flex oj-sm-flex-items-initial oj-sm-justify-content-center" style="max-width: 600px;">
+            <div class="oj-flex-item">
+              <h6>
+                <oj-bind-text value="[[validationMessageTitle]]"></oj-bind-text>
+              </h6>
+              <div>
+                <oj-bind-text value="[[validationMessageDetail]]"></oj-bind-text>
+              </div>
+            </div>
+          </div>
+        </oj-popup>
+        <oj-popup
+            id="expressionDetailPopup"
+            auto-dismiss="none"
+            tail="simple"
+            position='{"at": {"horizontal": "start", "vertical": "bottom"},"my": {"horizontal": "start","vertical": "top"}}'
+            modality="modeless">
+          <div class="oj-flex oj-sm-flex-wrap-nowrap">
+            <oj-button id="expressionDetailPopupOK" chroming="borderless" class="oj-helper-margin-start-auto oj-sm-flex-0 oj-button-sm" on-oj-action="[[expressionItemAction]]">
+              <span slot="startIcon" class="oj-ux-ico-check"></span>
+            </oj-button>
+            <oj-button id="expressionDetailPopupClose" chroming="borderless" class="oj-sm-flex-0 oj-button-sm" on-oj-action="[[expressionItemAction]]">
+              <span slot="startIcon" class=" oj-ux-ico-close"></span>
+            </oj-button>
+          </div>
+          <oj-bind-if test="[[expressionDetailVisible()]]">
+            <div class="oj-flex oj-sm-flex-wrap-nowrap expression-detail-container" style="min-width: 600px">
+              <div class="oj-flex oj-flex-item">                    
+                <div id="jq-expression-monaco-container" class="oj-flex-item">
+                </div>
+              </div>
+              <div id="function-container" style="display: none" class="oj-flex-item oj-sm-flex-0">
+                <oj-accordion>
+                  <oj-collapsible>
+                    <h3 slot="header" class="jq-operators oj-sm-padding-4x-end">
+                      operators
+                    </h3>
+                    <p>+ Addition</p>
+                    <p>- Substraction</p>
+                  </oj-collapsible>
+                  <oj-collapsible>
+                    <h3 slot="header" class="jq-functions oj-sm-padding-4x-end">
+                      functions
+                    </h3>
+                    <p>abs</p>
+                    <p>ceil</p>
+                    <p>floor</p>
+                  </oj-collapsible>
+                </oj-accordion>
+              </div>
+            </div>
+          </oj-bind-if>
+        </oj-popup>
+        <oj-dialog
+          id="targetDropPopup"
+          dialog-title="Warning"
+          cancel-behavior="icon"
+          modality="modeless"
+          class="oj-badge-warning oj-badge-subtle">
+          <div class="oj-flex">
+            <oj-bind-text value="[[dropPopupWarningText]]"></oj-bind-text>
+          </div>
+        </oj-dialog>
+      </oj-tree-view>
+    </div>
+    <div slot="mapping-canvas" class="oj-flex-item oj-flex" id="mapping-canvas-tab-panel" role="tabpanel" aria-labelledby="mapping-canvas-tab" >
+      <svg readOnly class="oj-flex-item oj-sm-flex-1 oj-border svg-container">
+          <line x1="0" y1="80" x2="600" y2="140" stroke="green" strokeWidth="2"/>
+          <line x1="0" y1="120" x2="600" y2="80" stroke="green" strokeWidth="2"/>
+
+          <line x1="0" y1="160" x2="600" y2="240" stroke="green" strokeWidth="2"/>
+          <line x1="0" y1="160" x2="600" y2="180" stroke="green" strokeWidth="2"/>
+      </svg>
+    </div>
+  </oj-switcher>
+</div>

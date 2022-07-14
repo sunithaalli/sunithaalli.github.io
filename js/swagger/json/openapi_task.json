@@ -1,0 +1,413 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "task_REQUEST",
+        "version": "v01"
+    },
+    "servers": [
+        {
+            "url": "https://localhost:8443/"
+        }
+    ],
+    "paths": {
+        "/endpoints/actions/b491cd64-8f48-446d-b43f-ab6538ef33ef": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/executeType"
+                            }
+                        }
+                    },
+                    "required": false
+                },
+                "responses": {
+                    "500": {
+                        "description": "Faults",
+                        "content": {}
+                    },
+                    "default": {
+                        "description": "A sample description of the Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/executeResponseType"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codegen-request-body-name": "execute"
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "executeType": {
+                "type": "object",
+                "properties": {
+                    "caasEndpointProperties": {
+                        "type": "object",
+                        "properties": {
+                            "connectivityproperties": {
+                                "title": "Connectivity Properties",
+                                "type": "object",
+                                "properties": {
+                                    "RestAPI": {
+                                        "title": "Rest API",
+                                        "type": "object",
+                                        "properties": {
+                                            "$choice-attrib-1": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "Plugin": {
+                                        "title": "Plugin",
+                                        "type": "object",
+                                        "properties": {
+                                            "PostQueryString": {
+                                                "title": "Post Query String",
+                                                "type": "boolean"
+                                            },
+                                            "UseFormURLEncoding": {
+                                                "title": "Use Form URL Encoding",
+                                                "type": "boolean"
+                                            },
+                                            "EnforceEmptyJSONObjectPayload": {
+                                                "title": "Enforce Empty JSON Object Payload",
+                                                "type": "boolean"
+                                            },
+                                            "EnforceAbsoluteEndpointURI": {
+                                                "title": "Enforce Absolute Endpoint URI",
+                                                "type": "boolean"
+                                            },
+                                            "SkipControlCharacters": {
+                                                "title": "Skip Control Characters",
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "endpointRequest": {
+                        "type": "object",
+                        "properties": {
+                            "request-wrapper": {
+                                "title": "Request Wrapper",
+                                "type": "object",
+                                "properties": {
+                                    "displayName": {
+                                        "title": "Display Name",
+                                        "type": "string"
+                                    },
+                                    "isOwner": {
+                                        "title": "Is Owner",
+                                        "type": "boolean"
+                                    },
+                                    "isShared": {
+                                        "title": "Is Shared",
+                                        "type": "boolean"
+                                    },
+                                    "wellknownListName": {
+                                        "title": "Wellknown List Name",
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "title": "Id",
+                                        "type": "string"
+                                    },
+                                    "invoices": {
+                                        "title": "Bill Lines",
+                                        "type": "array",
+                                        "items": {
+                                            "invoiceId": {
+                                                "title": "Invoice Id",
+                                                "type": "string"
+                                            },
+                                            "usageQuantity": {
+                                                "title": "Usage Quantity",
+                                                "type": "integer"
+                                            },
+                                            "invoiceDescription": {
+                                                "title": "Invoice Description",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "executeResponseType": {
+                "required": [
+                    "ConnectivityProperties",
+                    "response-wrapper"
+                ],
+                "type": "object",
+                "properties": {
+                    "response-wrapper": {
+                        "title": "Response Wrapper",
+                        "type": "object",
+                        "properties": {
+                            "importance": {
+                                "title": "Importance",
+                                "type": "string"
+                            },
+                            "isReminderOn": {
+                                "title": "Is Reminder On",
+                                "type": "boolean"
+                            },
+                            "status": {
+                                "title": "Status",
+                                "type": "string"
+                            },
+                            "title": {
+                                "title": "Title",
+                                "type": "string"
+                            },
+                            "createdDateTime": {
+                                "title": "Created Date Time",
+                                "type": "string"
+                            },
+                            "lastModifiedDateTime": {
+                                "title": "Last Modified Date Time",
+                                "type": "string"
+                            },
+                            "id": {
+                                "title": "Id",
+                                "type": "string"
+                            },
+                            "invoices": {
+                                "title": "Bill Lines",
+                                "type": "array",
+                                "items": {
+                                    "invoiceId": {
+                                        "title": "Invoice Id",
+                                        "type": "string"
+                                    },
+                                    "usageQuantity": {
+                                        "title": "Usage Quantity",
+                                        "type": "integer"
+                                    },
+                                    "invoiceDescription": {
+                                        "title": "Invoice Description",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "receipts": {
+                                "title": "Receipt Lines",
+                                "type": "array",
+                                "items": {
+                                    "receiptId": {
+                                        "title": "Receipt Id",
+                                        "type": "string"
+                                    },
+                                    "usageQuantity": {
+                                        "title": "Usage Quantity",
+                                        "type": "integer"
+                                    },
+                                    "receiptDescription": {
+                                        "title": "Receipt Description",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "body": {
+                                "title": "Body",
+                                "type": "object",
+                                "properties": {
+                                    "content": {
+                                        "title": "Content",
+                                        "type": "string"
+                                    },
+                                    "contentType": {
+                                        "title": "Content Type",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "completedDateTime": {
+                                "title": "Completed Date Time",
+                                "type": "object",
+                                "properties": {
+                                    "dateTime": {
+                                        "title": "Date Time",
+                                        "type": "string"
+                                    },
+                                    "timeZone": {
+                                        "title": "Time Zone",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "dueDateTime": {
+                                "title": "Due Date Time",
+                                "type": "object",
+                                "properties": {
+                                    "dateTime": {
+                                        "title": "Date Time",
+                                        "type": "string"
+                                    },
+                                    "timeZone": {
+                                        "title": "Time Zone",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "recurrence": {
+                                "title": "Recurrence",
+                                "type": "object",
+                                "properties": {
+                                    "pattern": {
+                                        "title": "Pattern",
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "title": "Type",
+                                                "type": "string"
+                                            },
+                                            "interval": {
+                                                "title": "Interval",
+                                                "type": "number"
+                                            },
+                                            "month": {
+                                                "title": "Month",
+                                                "type": "number"
+                                            },
+                                            "dayOfMonth": {
+                                                "title": "Day Of Month",
+                                                "type": "number"
+                                            },
+                                            "firstDayOfWeek": {
+                                                "title": "First Day Of Week",
+                                                "type": "string"
+                                            },
+                                            "index": {
+                                                "title": "Index",
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "range": {
+                                        "title": "Range",
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "title": "Type",
+                                                "type": "string"
+                                            },
+                                            "startDate": {
+                                                "title": "Start Date",
+                                                "type": "string"
+                                            },
+                                            "endDate": {
+                                                "title": "End Date",
+                                                "type": "string"
+                                            },
+                                            "recurrenceTimeZone": {
+                                                "title": "Recurrence Time Zone",
+                                                "type": "string"
+                                            },
+                                            "numberOfOccurrences": {
+                                                "title": "Number Of Occurrences",
+                                                "type": "number"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "ConnectivityProperties": {
+                        "title": "Connectivity Properties",
+                        "type": "object",
+                        "properties": {
+                            "RestAPI": {
+                                "title": "Rest API",
+                                "type": "object",
+                                "properties": {
+                                    "http.response.status": {
+                                        "title": "Http Response Status",
+                                        "minimum": 1,
+                                        "type": "integer"
+                                    },
+                                    "http.response.reason": {
+                                        "title": "Http Response Reason",
+                                        "type": "string"
+                                    },
+                                    "http.target.endpoint.uri": {
+                                        "title": "Http Target Endpoint Uri",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "APIInvocationError": {
+                "required": [
+                    "detail",
+                    "errorCode",
+                    "errorDetails",
+                    "title",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "string"
+                    },
+                    "errorDetails": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "errorCode",
+                                "errorPath",
+                                "instance",
+                                "title",
+                                "type"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "instance": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "errorPath": {
+                                    "type": "string"
+                                },
+                                "errorCode": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "x-original-swagger-version": "2.0"
+}
