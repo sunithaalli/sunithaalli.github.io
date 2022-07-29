@@ -151,6 +151,7 @@ define([
 
                 // assign the parent Expression to child expressions so that it is easy to walk the heirarchy
                 newExpression.parent = parentExpression;
+                newExpression.expression = ko.observable(newExpression.expression);
 
                 return newExpression;
             }));
@@ -213,7 +214,6 @@ define([
               id: `newnode${this.nextId++}`,
               expression: '""',
             }
-
 
             for (let i = 0; i < children().length; i++) {
               const child = children()[i];
@@ -281,7 +281,7 @@ define([
          */
         _createMonacoEditorForItem(context) {
           const monacoEditor = monaco.editor.create(document.getElementById('jq-expression-monaco-container'), {
-            value: context.data.expression,
+            value: context.data.expression(),
             language: 'jq',
             minimap: {
               enabled: false
@@ -305,18 +305,12 @@ define([
          */
         async _updateExpressionInRow(row, expressionValue, validate) {
           const containerElement = document.getElementById('jq-expression-monaco-container');
-          const oldExpressionValue = row.expression;
+          const oldExpressionValue = row.expression();
           let complexExprMissingBrackets = false;
 
-          try{
-            const newRow  = {...row};
-            newRow.expression = expressionValue;
-            if (newRow.children) {
-              newRow.children = ko.observableArray(row.children());
+          try {
+            row.expression(expressionValue);
 
-              newRow.children().forEach(child => child.parent = newRow);
-            }
-            
             if (validate) {
               // check if the expression has a space character in it
               if (expressionValue.split(' ').length > 1 && (expressionValue.charAt(0) !== '(' || 
@@ -324,21 +318,10 @@ define([
                     complexExprMissingBrackets = true;
                     throw new Error('Please surround complex expressions with brackets ()');
               }
-              await this._validateExpressionItem(newRow, expressionValue);
+              await this._validateExpressionItem(row, expressionValue);
             }
-            const parent = row.parent;
-            const observableArray = parent?.children || this.expressionsObservable;
-            // validation successful update the tree row by replacing the row
-            if (observableArray().length === 1 && parent.children) {
-              observableArray.removeAll();
-              observableArray.push(newRow);
-            } else {
-              observableArray.splice(observableArray().findIndex(element => element.id == row.id), 1, newRow);
-            }
-
-            containerElement.classList.remove('oj-badge-danger');
-            document.getElementById('validationErrorPopup').close();
             
+            // validation successful update the tree row by replacing the row
             if (validate) {
               // validation successful so close the editor popup
               this.expressionDetailVisible(false);
@@ -346,7 +329,10 @@ define([
             }
 
             this.domContainer.dispatchEvent(new Event('expressionItemChange', {detail: expressionValue}));
-          } catch (e){
+          } catch (e) {
+            // validation failure, set the old value back to the row
+            row.expression(oldExpressionValue);
+
             // Show error on expression element
             containerElement.classList.add('oj-badge-danger');
             this.validationMessageDetail('' + (complexExprMissingBrackets ? '' : e.stack));
@@ -384,7 +370,7 @@ define([
           let closeParentGroup = false;
           for (let i = 0; i < itemsInPath.length; i++) {
             const item = itemsInPath[i];
-            filterStr = `${filterStr}"${item.name}": ${item.expression || (item.children ? '' : null)}`;
+            filterStr = `${filterStr}"${item.name}": ${item.expression() || (item.children ? '' : null)}`;
 
             // close the group from the parent expression
             if ( closeParentGroup ) {
@@ -495,12 +481,9 @@ define([
           const targetDragContext = this.targetDragContext();
           const index = targetDragContext.indexOf(dropContext);
 
-
           if (targetDragContext !== this.rootNode && index !== -1){
-            
             // allow immediate chidren to be dropped inside a complex parent
-            if (context.position === 'inside' && (row.type === 'object' || row.type === 'array') && 
-                !row.children) {
+            if (context.position === 'inside' && (row.type === 'object' || row.type === 'array')) {
               const dragHeirarchy = jsonpath.parse(targetDragContext);
               if (dragHeirarchy.length > 1 && dragHeirarchy[dragHeirarchy.length - 2].expression.value === row.name) {
                 returnParams.isDropInside = true;
@@ -538,13 +521,63 @@ define([
             const row = (context?.item && context.item['oj-item-data']) || this._findRowFromEventTarget(event);
             const returnParams = this._isValidDropTarget(event, context, row);
             
-            if (!returnParams.isValid)
-            {
+            if (!returnParams.isValid) {
               event.dataTransfer.dropEffect = 'none';
             }
           }
         }
 
+        /**
+         * Validates the drop the drop target
+         * @param {*} params 
+         * @returns true if valid otherwise false
+         */
+        _validateDropTarget(params) {
+          if (params.isDuplicate) {
+            // TODO translate
+            this.dropPopupWarningText('Duplicate Expression Node');
+            document.getElementById('targetDropPopup').open();
+            return false;
+          } else if (!params.isValid) {
+            // TODO translate
+            this.dropPopupWarningText('Invalid Drop Location');
+            document.getElementById('targetDropPopup').open(event.target);
+            return false;
+          }
+
+          return true;
+        }
+
+        /**
+         * Handles inserting nodes inside an existing parent node
+         * @param {*} row 
+         * @param {*} relativeNodeHeirarchy 
+         * @param {*} relativeNodeTypes 
+         * @returns 
+         */
+        _handleDropInside(row, relativeNodeHeirarchy, relativeNodeTypes) {
+          const updatedRow =  {...row};
+          let nodeName = relativeNodeHeirarchy[relativeNodeHeirarchy.length - 1].expression.value;
+          let type = relativeNodeTypes[relativeNodeTypes.length - 1].expression.value;
+          const newNode = {
+            id: `newnode${this.nextId++}`,
+            name: nodeName,
+            type,
+            parent: updatedRow,
+            expression: ko.observable(type === 'array'? '[]': ''),
+            context: type === 'array' ? ' | map': undefined,
+          }
+
+          updatedRow.children = ko.observableArray(!updatedRow.children ? [] : updatedRow.children());
+
+          updatedRow.children.push(newNode);
+
+          // replace the row in the parent
+          const parent = row.parent;
+          const children = parent?.children || this.expressionsObservable;
+          children.splice(children().indexOf(row), 1, updatedRow);
+        }
+        
         /**
          * Handler for drag and drop  event
          * @param {*} event 
@@ -554,48 +587,24 @@ define([
           if (dragData) {
             const row = (context?.item && context.item['oj-item-data']) || this._findRowFromEventTarget(event);
 
-            const returnParams = this._isValidDropTarget(event, context, row);
+            const params = this._isValidDropTarget(event, context, row);
 
-            if (returnParams.isDuplicate) {
-              // TODO translate
-              this.dropPopupWarningText('Duplicate Expression Node');
-              document.getElementById('targetDropPopup').open();
-              return;
-            } else if (!returnParams.isValid) {
-              // TODO translate
-              this.dropPopupWarningText('Invalid Drop Location');
-              document.getElementById('targetDropPopup').open(event.target);
+            if (!this._validateDropTarget(params))
+            {
               return;
             }
 
             // heirachy of nodes that are being dropped 
-            const relativeNodeHeirarchy = returnParams.relativeNodeHeirarchy;
+            const relativeNodeHeirarchy = params.relativeNodeHeirarchy;
             // data types of nodes that are being dropped
-            const relativeNodeTypes = returnParams.relativeNodeTypes;
+            const relativeNodeTypes = params.relativeNodeTypes;
 
             // simply append the child element 
-            if (returnParams.isDropInside) {
-              const updatedRow =  {...row};
-              let nodeName = relativeNodeHeirarchy[relativeNodeHeirarchy.length - 1].expression.value;
-              let type = relativeNodeTypes[relativeNodeTypes.length - 1].expression.value;
-              const newNode = {
-                id: `newnode${this.nextId++}`,
-                name: nodeName,
-                type,
-                parent: updatedRow,
-                expression: type === 'array'? '[]': '',
-                context: type === 'array' ? ' | map': undefined,
-              }
-              if (!updatedRow.children) {
-                updatedRow.children = ko.observableArray([]);
-              }
-              updatedRow.children.push(newNode);
-
-              // replace the row in the parent
-              const children = parent?.children || this.expressionsObservable;
-              children.splice(children().indexOf(row),1, updatedRow);
+            if (params.isDropInside) {
+              this._handleDropInside(row, relativeNodeHeirarchy, relativeNodeTypes);
               return;
             }
+
             // declare function used for recursive insertion
             const buildChildren = (relativeNodeHeirarchy, parent, row) => {
               let nodeName = relativeNodeHeirarchy.splice(0, 1)[0].expression.value;
@@ -604,7 +613,7 @@ define([
                 id: `newnode${this.nextId++}`,
                 name: nodeName,
                 type,
-                expression: type === 'array'? '[]': '',
+                expression: ko.observable(type === 'array'? '[]': ''),
                 context: type === 'array' ? ' | map': undefined,
               }
 
@@ -647,6 +656,7 @@ define([
             // only allow source arrays to be dropped on the array targets
             if (this._currentEditRow.type === 'array') {
               const dragContextTypes = jsonpath.parse(this.sourceDragContextTypes());
+
               if (dragContextTypes[dragContextTypes.length - 1].expression.value !== 'array') {
                 return;
               }
@@ -676,7 +686,7 @@ define([
             while (parent) {
               if (parent.type === 'array') {
                 // check if we dropping inside a array parent, then auto create the parent mapping as well
-                if (parent.expression === '[]') {
+                if (parent.expression() === '[]') {
                   const dragContextTypes = jsonpath.parse(this.sourceDragContextTypes());
                   if (dragContextTypes.length - (parentDepth+1) >= 0 && dragContextTypes[dragContextTypes.length - (parentDepth + 1)].expression.value === 'array') {
                     let sourcePathWithRoot = sourceJsonPath;
@@ -702,8 +712,8 @@ define([
                 }
 
                 // if the parent is an array and it expression matches array expression being dragged compute relative path
-                if(sourceJsonPath.startsWith(parent.expression)) {
-                  sourceJsonPath = sourceJsonPath.substring(parent.expression.length);
+                if(sourceJsonPath.startsWith(parent.expression())) {
+                  sourceJsonPath = sourceJsonPath.substring(parent.expression().length);
                   break;
                 }
               }
@@ -734,7 +744,7 @@ define([
         generateStringFromExpressions(expressions) {
           let filterStr = ''
           expressions.forEach((item, index) => {
-            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.name}": ${item.expression || (item.children ? '' : null)}`;
+            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.name}": ${item.expression() || (item.children ? '' : null)}`;
             if (item.children) {
               filterStr = `${filterStr} ${item.context? item.context + '(' : ''} {`;
               filterStr = `${filterStr} ${this.generateStringFromExpressions(item.children())}`;
@@ -760,7 +770,7 @@ define([
 
         async runJQFilterOnSourcePayload(payload) {
           try{
-            let jsonFromPayload = (typeof payload === 'string')? JSON.parse(payload) : payload;
+            let jsonFromPayload = (typeof payload === 'string') ? JSON.parse(payload) : payload;
             const result = await jq.promised.json(jsonFromPayload, this.buildJQExpressionFilter());
 
             return JSON.stringify(result, null, 2);
