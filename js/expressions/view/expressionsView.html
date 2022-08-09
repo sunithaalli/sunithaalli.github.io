@@ -12,7 +12,7 @@
   <oj-switcher value="[[selectedTabItem]]" class="oj-flex oj-flex-item oj-sm-flex-1">
     <div slot="expression-list" id="expression-list-tab-panel" class="oj-sm-flex-1 oj-flex oj-sm-flex-direction-column" role="tabpanel" aria-labelledby="expression-list-tab">
       <div class="oj-sm-margin-4x-vertical"> 
-        <oj-label for="show-source-payload-switch" class="oj-sm-align-self-center oj-sm-margin-2x-start oj-typography-subheading-md oj-text-primary-color">
+        <oj-label for="show-source-payload-switch" :class="[[sourceMappingMode() ? 'oj-border oj-sm-padding-1x' : '']]" class="oj-sm-align-self-center oj-sm-margin-2x-start oj-typography-subheading-md oj-text-primary-color">
           <oj-bind-text value="[[rootNode]]"></oj-bind-text> 
         </oj-label>
         <hr></hr>
@@ -22,7 +22,7 @@
         aria-label="Expressions Tree View"
         data="[[expressionsDataProvider]]"
         expanded="{{expanded}}"
-        dnd.drop.items.data-types='["application/targetschemanodes+json"]'
+        dnd.drop.items.data-types="[[dropItemsTypes]]"
         dnd.drop.items.drop="[[handleDrop]]"
         dnd.drop.items.drag-over="[[handleDragOver]]"
         class="oj-sm-width-full">
@@ -30,7 +30,7 @@
         <template slot="itemTemplate" data-oj-as="row">
           <div class="oj-flex oj-sm-flex-1 oj-sm-align-items-center oj-border-bottom" :data-row-id="[[row.data.id]]">
             <div class="oj-flex-item oj-sm-flex-0">
-              <span class="oj-treeview-item-text">
+              <span :class="[[sourceMappingMode() ? 'oj-border oj-sm-padding-1x' : '']]" on-click="[[expressionNameClick]]" class="oj-treeview-item-text">
                 <oj-bind-text value="[[row.data.name]]"></oj-bind-text>
               </span>
             </div>
@@ -56,6 +56,7 @@
                   id="addExpressionItemPopup"
                   auto-dismiss="none"
                   tail="simple"
+                  on-keyup="[[handlePopupKeyUp]]"
                   position='{"at": {"horizontal": "start", "vertical": "center"},"my": {"horizontal": "end","vertical": "center"}}'
                   modality="modeless">
                   <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-align-items-center">
@@ -73,6 +74,24 @@
             </div>
           </div>
         </template>
+        <oj-popup
+          id="editExpressionItemNamePopup"
+          auto-dismiss="none"
+          tail="simple"
+          on-keyup="[[handlePopupKeyUp]]"
+          position='{"at": {"horizontal": "end", "vertical": "center"},"my": {"horizontal": "start","vertical": "center"}}'
+          modality="modeless">
+          <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-align-items-center">
+            <oj-input-text class="oj-flex-item"
+            value="{{editRowItemName}}"
+            label-hint="Node Name"
+            label-edge="inside">
+            </oj-input-text>
+            <oj-button id="editExpressionItemNameOK"  class="oj-flex-item oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
+              <span slot="startIcon" class="oj-ux-ico-check"></span>
+            </oj-button>
+          </div>
+        </oj-popup>
         <oj-popup
           id="validationErrorPopup"
           auto-dismiss="none"

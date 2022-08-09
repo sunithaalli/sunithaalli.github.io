@@ -72,6 +72,9 @@
             <oj-button id="addExpressionOK" chroming="full" class="oj-button-sm oj-sm-margin-2x-end" on-oj-action="[[showGeneratedJQ]]">
               show Generated JQ
             </oj-button>
+            <oj-switch id="toggle-src-mapping-mode" class="oj-sm-margin-2x-end" value="{{ sourceMappingMode }}"></oj-switch>
+            <oj-label for="toggle-src-mapping-mode" class="oj-sm-margin-4x-end">Source Mapping Mode</oj-label>
+
             <oj-switch id="toggle-schema-mode" class="oj-sm-margin-2x-end" value="{{ schemaMode }}"></oj-switch>
             <oj-label for="toggle-schema-mode">Switch To Schema Model</oj-label>
             <oj-menu-button id="userMenu" display="[[smScreen() ? 'icons' : 'all']]" chroming="borderless">

@@ -20,7 +20,7 @@ define([
       }`), null, 2));
 
       class SourceTreeView extends BaseTreeView {
-        constructor (domContainer, schemaMode, sourceSwagger, rootPath) {
+        constructor (domContainer, schemaMode, sourceMappingMode, sourceSwagger, rootPath) {
           super(domContainer, sourceTreeViewHtml, 'source-tree', schemaMode, 'application/sourceschemanodes+json');
           this._inputJsonShapeless = mockInputJson; // use mock data for the time being
           

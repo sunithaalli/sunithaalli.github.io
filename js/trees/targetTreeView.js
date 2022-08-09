@@ -5,11 +5,11 @@ define([
   'text!./view/targetTreeView.html'],
     (ko, BaseTreeView, MonacoEditor, targetTreeViewHtml) => {
       class TargetTreeView extends BaseTreeView {
-        constructor (domContainer, schemaMode, targetSwagger, rootPath) {
+        constructor (domContainer, schemaMode, sourceMappingMode, targetSwagger, rootPath) {
           super(domContainer, targetTreeViewHtml, 'target-tree', schemaMode, 'application/targetschemanodes+json');
           this._outputJsonShapeless = ko.observable('{}');
           this.schemaTreeHeader = "Target";
-          this.showTargetOutput = ko.observable(false);
+          this.showTargetOutput = ko.observable(sourceMappingMode());
           this._targetOutput = ko.observable('');
 
           if (!schemaMode()) {
@@ -34,7 +34,10 @@ define([
           this.dropPopupText = ko.observable('');
           this.targetMonacoEditorShapless = undefined;
           this.handleDragStart = this._handleDragStart.bind(this);
-
+          this.sourceMappingMode = sourceMappingMode;
+          this.sourceMappingMode.subscribe((newValue) => {
+            this.showTargetOutput(newValue);
+          });
           this.initBinding(domContainer);
         }
 

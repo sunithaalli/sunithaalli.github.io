@@ -31,6 +31,10 @@
     height: 100%;
 }
 
+.expression-name-editable {
+    color: var(--oj-link-text-color);
+}
+
 .jq-operators.oj-collapsible-header{
     background-color: #437c94;
     

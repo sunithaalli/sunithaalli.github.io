@@ -81,14 +81,15 @@ define([
         /**
          * Creates the expression View UI model
          * @param {DOMElement} domContainer 
-         * @param {DOMElement} schemaMode 
+         * @param {boolean} schemaMode 
+         * @param {boolean} sourceMappingMode 
          * @param {ko.Binding} targetDragContext drag context value of the target node that is updated during drag and drop
          * @param {ko.Binding} sourceDragContext drag context value of the source node that is updated during drag and drop
          * @param {ko.Binding} targetDragContextTypes data types for the drag context of the target node that is updated during drag and drop
          * @param {ko.Binding} sourceDragContextTypes data types for the drag context of the source node that is updated during drag and drop
          * @param {Array<*>} schemaExpressions data for expressions
          */
-        constructor (domContainer, schemaMode, targetDragContext, sourceDragContext, targetDragContextTypes, sourceDragContextTypes, expressions = schemaMode() ? mockSchemaExpressions : mockExpressions) {
+        constructor (domContainer, schemaMode, sourceMappingMode, targetDragContext, sourceDragContext, targetDragContextTypes, sourceDragContextTypes, expressions = schemaMode() ? mockSchemaExpressions : mockExpressions) {
           this.selectedTabItem = ko.observable('expression-list');
           this.expressionColumns=[
             {'headerText': 'Target Node', 'minWidth': '10.5rem', 'headerClassName': 'oj-sm-padding-6x-start', 'sortable': 'disabled'},
@@ -96,10 +97,21 @@ define([
             {'headerText': 'Actions', 'minWidth': '7.8rem','sortable': 'disabled'}
           ];
     
-          // temporary hardcoded
           this.expressionsObservable = this.createNestedObservableArray(expressions);
           
-          this.rootNode = 'response-wrapper';
+          this.rootNode = ko.observable('response-wrapper');
+          this.sourceMappingMode = sourceMappingMode;
+
+          this.dropItemsTypes = sourceMappingMode() ? ['application/sourceschemanodes+json'] 
+                                  : ['application/targetschemanodes+json'];
+          
+          this.sourceMappingMode.subscribe((mode) => {
+            this.dropItemsTypes = mode ? ['application/sourceschemanodes+json'] 
+                                  : ['application/targetschemanodes+json'];
+            const treeView = document.getElementById('expression-tree-view');
+            treeView.dnd.drop.items.dataTypes = this.dropItemsTypes;
+          });
+
           this.nextId = 1;
 
           this.expressionsDataProvider = new ArrayTreeDataProvider(this.expressionsObservable, {keyAttibutes: 'id'});
@@ -113,11 +125,14 @@ define([
           this.validationMessageDetail = ko.observable('');
           this.dropPopupWarningText = ko.observable('');
           this.newExpressionItemName = ko.observable('');
+          this.editRowItemName = ko.observable('');
           this._expressionValue = ko.observable('');
 
           // row being currently edited
           this._currentEditRow = undefined;
           this.expressionItemAction = this._expressionItemAction.bind(this);
+          this.expressionNameClick = this._expressionNameClick.bind(this);
+          this.handlePopupKeyUp = this._handlePopupKeyUp.bind(this);
           this.expressionDetailVisible = ko.observable(false);
 
           ko.cleanNode(domContainer);
@@ -151,6 +166,7 @@ define([
 
                 // assign the parent Expression to child expressions so that it is easy to walk the heirarchy
                 newExpression.parent = parentExpression;
+                newExpression.name = ko.observable(newExpression.name);
                 newExpression.expression = ko.observable(newExpression.expression);
 
                 return newExpression;
@@ -178,6 +194,11 @@ define([
           this._payloadForValidation = value;
         }
 
+        /**
+         * 
+         * @param {*} event 
+         * @param {*} context 
+         */
         _expressionItemAction(event, context){
           if (event.target.id === 'editExpression') {
             this._editExpressionItem(context);
@@ -188,14 +209,55 @@ define([
             this.addExpressionItemSavedRow = context.data;
           } else if (event.target.id === 'addExpressionOK'){
             this._addExpressionItem(this.addExpressionItemSavedRow);
+            this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
             document.getElementById('addExpressionItemPopup').close();
           } else if (event.target.id === 'deleteExpression') {
             this._deleteExpressionItem(context);
+            this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
           } else if (event.target.id === 'expressionDetailPopupClose') {
             this.expressionDetailVisible(false);
             document.getElementById('expressionDetailPopup').close();
           } else if (event.target.id === 'expressionDetailPopupOK') {
             this._expressionDetailPopupOK(this.editExpressionItemSavedRow);
+          } else if (event.target.id === 'editExpressionItemNameOK') {
+            this.editNameRow.name(this.editRowItemName());
+            document.getElementById('editExpressionItemNamePopup').close();
+            this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
+          }
+        }
+
+        /**
+         * 
+         * @param {*} event 
+         * @param {*} context 
+         */
+        _expressionNameClick(event, context) {
+          // only allow for source mapping mode
+          if (this.sourceMappingMode()) {
+            const row = context.data;
+            if (this.editNameRow) {
+              document.getElementById('editExpressionItemNamePopup').close();
+            }
+            this.editNameRow = row;
+            this.editRowItemName (row.name());
+            document.getElementById('editExpressionItemNamePopup').open(event.target);
+          }
+        }
+        
+        /**
+         * 
+         * @param {*} event 
+         */
+        _handlePopupKeyUp(event) {
+          if (event.key === 'Enter') {
+            if (event.currentTarget.id === 'addExpressionItemPopup') {
+              this._addExpressionItem(this.addExpressionItemSavedRow);
+              document.getElementById('addExpressionItemPopup').close();
+            } else if (event.currentTarget.id === 'editExpressionItemNamePopup') {
+              this.editNameRow.name(this.editRowItemName());
+              document.getElementById('editExpressionItemNamePopup').close();
+            }
+            this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
           }
         }
 
@@ -210,7 +272,7 @@ define([
             const parent = row.parent; 
             const children = parent?.children || this.expressionsObservable;
             const newNode = {
-              name: nodeName,
+              name: ko.observable(nodeName),
               id: `newnode${this.nextId++}`,
               expression: '""',
             }
@@ -328,7 +390,7 @@ define([
               document.getElementById('expressionDetailPopup').close();
             }
 
-            this.domContainer.dispatchEvent(new Event('expressionItemChange', {detail: expressionValue}));
+            this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
           } catch (e) {
             // validation failure, set the old value back to the row
             row.expression(oldExpressionValue);
@@ -366,7 +428,7 @@ define([
           }
 
           const payloadObject = JSON.parse(this._payloadForValidation);
-          let filterStr = `{ "${this.rootNode}": {`;
+          let filterStr = `{ "${this.rootNode()}": {`;
           let closeParentGroup = false;
           for (let i = 0; i < itemsInPath.length; i++) {
             const item = itemsInPath[i];
@@ -439,10 +501,10 @@ define([
           const parentContext = [];
           let parent = row.parent;
           while(parent) {
-            parentContext.unshift(parent.name);
+            parentContext.unshift(parent.name());
             parent = parent.parent;
           }
-          parentContext.unshift(this.rootNode);
+          parentContext.unshift(this.rootNode());
           const dropContext = jsonpath.stringify(parentContext);
           return dropContext;
         }
@@ -457,7 +519,7 @@ define([
           const children = parent?.children() || this.expressionsObservable();
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (child.name === dragItemTitle) {
+            if (child.name() === dragItemTitle) {
               return true;
             }
           }
@@ -513,12 +575,40 @@ define([
         }
 
         /**
+         * Validates that the source node being dropped is unique under a parent node
+         * @param {*} row 
+         */
+        _isValidSourceNode(row) {
+          const dragContext = this.sourceDragContext();
+          if (dragContext) {
+            const dragHeirarchy = jsonpath.parse(dragContext);
+            if (dragHeirarchy.length > 0) {
+              const nodeName = dragHeirarchy[dragHeirarchy.length - 1].expression.value;
+              if (this._isDuplicateChildForDrop(row, nodeName)){
+                return false;
+              }
+            }
+          }
+
+          return true;
+        }
+        /**
          * Handler for drag enter event
          * @param {*} event 
          */
         _handleDragOver(event, context) {
-          if (event.dataTransfer.types.indexOf('application/targetschemanodes+json') !== -1) {
+          const dataType = this.sourceMappingMode() ? 'application/sourceschemanodes+json': 'application/targetschemanodes+json';
+          if (event.dataTransfer.types.indexOf(dataType) !== -1) {
             const row = (context?.item && context.item['oj-item-data']) || this._findRowFromEventTarget(event);
+
+            // source mapping mode only validate the node anme
+            if (this.sourceMappingMode()) {
+              if(!this._isValidSourceNode(row)) {
+                event.dataTransfer.dropEffect = 'none';
+              }
+              return;
+            }
+            
             const returnParams = this._isValidDropTarget(event, context, row);
             
             if (!returnParams.isValid) {
@@ -561,7 +651,7 @@ define([
           let type = relativeNodeTypes[relativeNodeTypes.length - 1].expression.value;
           const newNode = {
             id: `newnode${this.nextId++}`,
-            name: nodeName,
+            name: ko.observable(nodeName),
             type,
             parent: updatedRow,
             expression: ko.observable(type === 'array'? '[]': ''),
@@ -577,15 +667,95 @@ define([
           const children = parent?.children || this.expressionsObservable;
           children.splice(children().indexOf(row), 1, updatedRow);
         }
+
+        /**
+         * When the drag and drop from the source is enabled and the drag node has children create the whole hierarchy
+         * @param {*} node 
+         * @param {Array} children 
+         */
+        _createChildrenFromDragSource(node, children) {
+          const childExpressions = [];
+          children.forEach((child) => {
+            const newNode = {
+              id: `newnode${this.nextId++}`,
+              name: ko.observable(child.title),
+              type: child.type,
+              parent: node,
+              expression: ko.observable(child.type === 'array'? '[]': ''),
+              context: child.type === 'array' ? ' | map': undefined,
+            }
+            if (child.children) {
+              this._createChildrenFromDragSource(newNode, child.children);
+            }
+            childExpressions.push(newNode);
+          });
+
+          node.children = ko.observableArray(childExpressions)
+        }
         
+        /**
+         * Handle drag and drop from the source
+         * @param {*} context 
+         * @param {*} row 
+         * @param {Array} dragNodeChildren children of the drag data if any
+         * @returns 
+         */
+        _handleDropFromSource(context, row, dragNodeChildren) {
+          if (!this._isValidSourceNode(row) || !this.sourceDragContext())
+          {
+            return;
+          }
+          const dragHeirarchy = jsonpath.parse(this.sourceDragContext());
+          const nodeName = dragHeirarchy[dragHeirarchy.length - 1].expression.value;
+          const dragContextTypes = jsonpath.parse(this.sourceDragContextTypes());
+          const type = dragContextTypes[dragContextTypes.length - 1].expression.value;
+
+          const newNode = {
+            id: `newnode${this.nextId++}`,
+            name: ko.observable(nodeName),
+            type,
+            parent: row.parent,
+            expression: ko.observable(type === 'array'? '[]': ''),
+            context: type === 'array' ? ' | map': undefined,
+          }
+
+          if (dragNodeChildren) {
+            this._createChildrenFromDragSource(newNode, dragNodeChildren);
+          }
+
+          const parent = row.parent;
+          const children = parent?.children || this.expressionsObservable;
+          if (context.position === 'inside' && (row.type === 'array' || row.type ==='object')) {
+            const updatedRow =  {...row};
+            updatedRow.children = ko.observableArray(!updatedRow.children ? [] : updatedRow.children());
+
+            updatedRow.children.push(newNode);
+
+            // replace the row in the parent
+            const parent = row.parent;
+            const children = parent?.children || this.expressionsObservable;
+            children.splice(children().indexOf(row), 1, updatedRow);
+          } else {
+            const index = children().indexOf(row);
+            children.splice(context.position === 'before' ? index : index + 1, 0, newNode);  
+          }
+          this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));          
+        }
+
         /**
          * Handler for drag and drop  event
          * @param {*} event 
          */
         _handleDrop(event, context) {
-          const dragData = event.dataTransfer.getData('application/targetschemanodes+json');
+          const dataType = this.sourceMappingMode() ? 'application/sourceschemanodes+json': 'application/targetschemanodes+json';
+          const dragData = event.dataTransfer.getData(dataType);
           if (dragData) {
             const row = (context?.item && context.item['oj-item-data']) || this._findRowFromEventTarget(event);
+
+            if (this.sourceMappingMode()) {
+              const dragDataObj = JSON.parse(dragData);
+              return this._handleDropFromSource(context, row, dragDataObj[0]?.children);
+            }
 
             const params = this._isValidDropTarget(event, context, row);
 
@@ -611,7 +781,7 @@ define([
               let type = relativeNodeTypes.splice(0, 1)[0].expression.value;
               const newNode = {
                 id: `newnode${this.nextId++}`,
-                name: nodeName,
+                name: ko.observable(nodeName),
                 type,
                 expression: ko.observable(type === 'array'? '[]': ''),
                 context: type === 'array' ? ' | map': undefined,
@@ -744,7 +914,7 @@ define([
         generateStringFromExpressions(expressions) {
           let filterStr = ''
           expressions.forEach((item, index) => {
-            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.name}": ${item.expression() || (item.children ? '' : null)}`;
+            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.name()}": ${item.expression() || (item.children ? '' : null)}`;
             if (item.children) {
               filterStr = `${filterStr} ${item.context? item.context + '(' : ''} {`;
               filterStr = `${filterStr} ${this.generateStringFromExpressions(item.children())}`;
@@ -760,7 +930,7 @@ define([
          * @returns Builds the JQ Expression used for test/runtime functionality
          */
         buildJQExpressionFilter() {
-          let filterStr = `{ "${this.rootNode}": {`;
+          let filterStr = `{ "${this.rootNode()}": {`;
           filterStr = `${filterStr} ${this.generateStringFromExpressions(this.expressionsObservable())}`;
           filterStr = `${filterStr} }}`;
 

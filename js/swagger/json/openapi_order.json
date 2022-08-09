@@ -146,6 +146,34 @@
                                                 "maximum": 10000
                                             }
                                         }
+                                    },
+                                    "orderCompletionDate": {
+                                        "title": "Completed Date Time",
+                                        "type": "object",
+                                        "properties": {
+                                            "dateTime": {
+                                                "title": "Date Time",
+                                                "type": "string"
+                                            },
+                                            "timeZone": {
+                                                "title": "Time Zone",
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "orderDueDateTime": {
+                                        "title": "Due Date Time",
+                                        "type": "object",
+                                        "properties": {
+                                            "dateTime": {
+                                                "title": "Date Time",
+                                                "type": "string"
+                                            },
+                                            "timeZone": {
+                                                "title": "Time Zone",
+                                                "type": "string"
+                                            }
+                                        }
                                     }
                                 }
                             }

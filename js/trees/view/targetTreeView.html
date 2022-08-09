@@ -1,5 +1,5 @@
 <div class="oj-flex-item oj-flex oj-sm-flex-direction-column">
-  <oj-bind-if test="[[!schemaMode()]]">
+  <oj-bind-if test="[[!schemaMode()]]">    
     <oj-tab-bar data-oj-binding-provider="none" edge="top" selection="{{selectedTabItem}}">
       <ul>
         <li id="target-tree">
@@ -10,7 +10,7 @@
         </li>
       </ul>
     </oj-tab-bar>
-
+    
     <oj-switcher value="[[selectedTabItem]]" class="oj-flex oj-flex-item oj-sm-flex-1">
       <div slot="target-tree" id="target-tree-tab-panel" class="oj-flex-item oj-sm-flex-1 oj-sm-padding-2x" role="tabpanel" aria-labelledby="target-tree-tab">
         <oj-tree-view
@@ -38,16 +38,18 @@
     </oj-switcher>
   </oj-bind-if>
   <oj-bind-if test="[[schemaMode()]]">
-    <div class="oj-typography-subheading-md oj-sm-margin-2x-start oj-flex">
-      <oj-bind-text value="[[schemaTreeHeader]]"></oj-bind-text>
-      <oj-switch 
-        id="show-target-output-switch"
-        value="{{showTargetOutput}}"
-        class="oj-sm-margin-4x-start">
-      </oj-switch>
-      <oj-label for="show-target-output-switch" class="oj-sm-align-self-center oj-sm-margin-2x-start">Target Output</oj-label>
-      <hr>
-    </div>
+    <oj-bind-if test="[[!sourceMappingMode()]]">
+      <div class="oj-typography-subheading-md oj-sm-margin-2x-start oj-flex">
+        <oj-bind-text value="[[schemaTreeHeader]]"></oj-bind-text>
+        <oj-switch 
+          id="show-target-output-switch"
+          value="{{showTargetOutput}}"
+          class="oj-sm-margin-4x-start">
+        </oj-switch>
+        <oj-label for="show-target-output-switch" class="oj-sm-align-self-center oj-sm-margin-2x-start">Target Output</oj-label>
+        <hr>
+      </div>
+    </oj-bind-if>
     <div style="max-height: calc(100vh - 150px); overflow: auto;" class="oj-flex-item oj-sm-flex-1 oj-sm-padding-2x" id="target-schema-tree">
       <oj-bind-if test="[[showTargetOutput()]]">
         <div id="target-output-monaco-container" class="oj-flex-item oj-sm-flex-1" style="height: 100%;">

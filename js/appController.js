@@ -51,6 +51,7 @@ define([
 
         this.generatedJQFilter = ko.observable('');
         this.schemaMode = ko.observable(true);
+        this.sourceMappingMode = ko.observable(false);
         this.swaggerParser = new SwaggerParser();
 
         this.jqFilter1 = ko.observable('{foo: .x.y,  soo: "new value", bar: .z}');
@@ -81,7 +82,7 @@ define([
        */
       initTrees() {
         this.sourceTreeView = new SourceTreeView(document.getElementById('inputTreeViewContainer'),
-        this.schemaMode, this.swaggerParser.orderSwagger, '$.components.schemas.executeType..endpointRequest');
+          this.schemaMode, this.sourceMappingMode, this.swaggerParser.orderSwagger, '$.components.schemas.executeType..endpointRequest');
 
         // shapeless mode
         if(this.inputJsonShapelessSubscribe) {
@@ -108,7 +109,7 @@ define([
 
         // target tree
         this.targetTreeView = new TargetTreeView(document.getElementById('outputTreeViewContainer'),
-          this.schemaMode, this.swaggerParser.taskSwagger, '$.components.schemas..executeResponseType');
+          this.schemaMode, this.sourceMappingMode, this.swaggerParser.taskSwagger, '$.components.schemas..executeResponseType');
         this.outputJsonShapeless = this.targetTreeView.outputJsonShapelessBinding;
 
         this.targetDragContext = this.targetTreeView.dragContextBinding;
@@ -123,6 +124,11 @@ define([
         }
       }
 
+      async _generateTargetJsonOutput() {
+        const output = await this.expressionsView.runJQFilterOnSourcePayload(this.jsonPayloadForSchema());
+        this.targetTreeView.targetOutputJsonBinding(output);
+        this.generatedJQFilter(this.expressionsView.generatedJQExpression);
+      }
       /**
        * Initializes the entire UI
        */
@@ -133,19 +139,26 @@ define([
         this.schemaMode.subscribe(() => {
           this.initTrees();
         })
+
         this.initTrees();
         const expressionsViewContainer = document.getElementById('expressionsViewContainer');
-        this.expressionsView = new ExpressionsView(expressionsViewContainer, this.schemaMode, this.targetDragContext, this.sourceDragContext, this.targetDragContextTypes, this.sourceDragContextTypes);
+        this.expressionsView = new ExpressionsView(expressionsViewContainer, this.schemaMode, this.sourceMappingMode, 
+          this.targetDragContext, this.sourceDragContext, this.targetDragContextTypes, this.sourceDragContextTypes);
         
         expressionsViewContainer.addEventListener('generateSourcePayload', async () => {
           this.sourceTreeView.generateJsonPayload();
         });
 
-        expressionsViewContainer.addEventListener('expressionItemChange', async (event) => {
-          const output = await this.expressionsView.runJQFilterOnSourcePayload(this.jsonPayloadForSchema());
-          this.targetTreeView.targetOutputJsonBinding(output);
-          this.generatedJQFilter(this.expressionsView.generatedJQExpression);
+        expressionsViewContainer.addEventListener('generateTargetJsonOutput', async () => {
+          await this._generateTargetJsonOutput();
         });
+
+        this.sourceMappingMode.subscribe(async (value) => {
+          if (value) {
+            await this.sourceTreeView.generateJsonPayload();
+            await this._generateTargetJsonOutput();
+          }
+        })
       }
 
       showGeneratedJQ() {
