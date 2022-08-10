@@ -56,6 +56,7 @@
                   id="addExpressionItemPopup"
                   auto-dismiss="none"
                   tail="simple"
+                  initial-focus="firstFocusable"
                   on-keyup="[[handlePopupKeyUp]]"
                   position='{"at": {"horizontal": "start", "vertical": "center"},"my": {"horizontal": "end","vertical": "center"}}'
                   modality="modeless">
@@ -65,6 +66,16 @@
                     label-hint="Node Name"
                     label-edge="inside">
                     </oj-input-text>
+                    <oj-combobox-one
+                      id="combobox1"
+                      value="{{newExpressionItemType}}"
+                      label-hint="Data Type"
+                      label-edge="inside"
+                      class="oj-form-control-max-width-md">
+                        <oj-option value="default">default</oj-option>
+                        <oj-option value="array">array</oj-option>
+                        <oj-option value="object">object</oj-option>
+                    </oj-combobox-one>
                     <oj-button id="addExpressionOK"  class="oj-flex-item oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
                       <span slot="startIcon" class="oj-ux-ico-check"></span>
                     </oj-button>
@@ -78,6 +89,7 @@
           id="editExpressionItemNamePopup"
           auto-dismiss="none"
           tail="simple"
+          initial-focus="firstFocusable"
           on-keyup="[[handlePopupKeyUp]]"
           position='{"at": {"horizontal": "end", "vertical": "center"},"my": {"horizontal": "start","vertical": "center"}}'
           modality="modeless">
@@ -90,26 +102,6 @@
             <oj-button id="editExpressionItemNameOK"  class="oj-flex-item oj-button-sm oj-sm-margin-0" on-oj-action="[[expressionItemAction]]">
               <span slot="startIcon" class="oj-ux-ico-check"></span>
             </oj-button>
-          </div>
-        </oj-popup>
-        <oj-popup
-          id="validationErrorPopup"
-          auto-dismiss="none"
-          modality="modeless"
-          position.at.horizontal="start"
-          position.at.vertical="bottom"
-          position.my.horizontal="start"
-          position.my.vertical="top"
-          tail="simple">
-          <div class="oj-flex oj-sm-flex-items-initial oj-sm-justify-content-center" style="max-width: 600px;">
-            <div class="oj-flex-item">
-              <h6>
-                <oj-bind-text value="[[validationMessageTitle]]"></oj-bind-text>
-              </h6>
-              <div>
-                <oj-bind-text value="[[validationMessageDetail]]"></oj-bind-text>
-              </div>
-            </div>
           </div>
         </oj-popup>
         <oj-popup
@@ -152,6 +144,16 @@
                 </oj-accordion>
               </div>
             </div>
+            <oj-bind-if test="[[expressionValidationVisible]]">
+              <div>
+                <h6>
+                  <oj-bind-text value="[[validationMessageTitle]]"></oj-bind-text>
+                </h6>
+                <div>
+                  <oj-bind-text value="[[validationMessageDetail]]"></oj-bind-text>
+                </div>
+              </div>
+            </oj-bind-if>
           </oj-bind-if>
         </oj-popup>
         <oj-dialog

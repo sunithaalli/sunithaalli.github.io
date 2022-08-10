@@ -4,6 +4,7 @@ define([
   'ojs/ojkeyset',
   'text!./view/expressionsView.html',
   'jsonpath',
+  'ojs/ojselectcombobox',
   'ojs/ojdialog',
   'ojs/ojknockout', 
   'ojs/ojtreeview'],
@@ -125,8 +126,10 @@ define([
           this.validationMessageDetail = ko.observable('');
           this.dropPopupWarningText = ko.observable('');
           this.newExpressionItemName = ko.observable('');
+          this.newExpressionItemType = ko.observable('default');
           this.editRowItemName = ko.observable('');
           this._expressionValue = ko.observable('');
+          this.expressionValidationVisible = ko.observable(false);
 
           // row being currently edited
           this._currentEditRow = undefined;
@@ -271,10 +274,13 @@ define([
           if (row && nodeName) {
             const parent = row.parent; 
             const children = parent?.children || this.expressionsObservable;
+            const type = this.newExpressionItemType() !== 'default' ? this.newExpressionItemType() : undefined;
             const newNode = {
               name: ko.observable(nodeName),
               id: `newnode${this.nextId++}`,
-              expression: '""',
+              type, 
+              context: type === 'array' ? ' | map': undefined,
+              expression:  ko.observable(type === 'array'? '[]': ''),
             }
 
             for (let i = 0; i < children().length; i++) {
@@ -321,6 +327,7 @@ define([
             this.expressionDetailVisible(false);
             expressionDetailPopup.close();
           } else {
+            this.expressionValidationVisible(false);
             this._currentEditRow = context.data;
             expressionDetailPopup.open(`#rowExpressionText${context.data.id}`);
             this.expressionDetailVisible(true);
@@ -399,7 +406,7 @@ define([
             containerElement.classList.add('oj-badge-danger');
             this.validationMessageDetail('' + (complexExprMissingBrackets ? '' : e.stack));
             this.validationMessageTitle(e.message);
-            document.getElementById('validationErrorPopup').open('#jq-expression-monaco-container');
+            this.expressionValidationVisible(true);
           }
         }
         /**
