@@ -281,8 +281,8 @@ define([
               type, 
               context: type === 'array' ? ' | map': undefined,
               expression:  ko.observable(type === 'array'? '[]': ''),
+              parent,
             }
-
             for (let i = 0; i < children().length; i++) {
               const child = children()[i];
               if (child.id === row.id) {
@@ -434,29 +434,25 @@ define([
             parentRow = parentRow.parent;
           }
 
-          const payloadObject = JSON.parse(this._payloadForValidation);
-          let filterStr = `{ "${this.rootNode()}": {`;
-          let closeParentGroup = false;
-          for (let i = 0; i < itemsInPath.length; i++) {
-            const item = itemsInPath[i];
-            filterStr = `${filterStr}"${item.name}": ${item.expression() || (item.children ? '' : null)}`;
-
-            // close the group from the parent expression
-            if ( closeParentGroup ) {
-              filterStr = `${filterStr} })`;
-              closeParentGroup = false;
+          const buildExpressionStr = (items, index) => {
+            let filterStr = '';
+            if (index < items.length) {
+              const item = items[index];
+              filterStr = `${filterStr}"${item.name()}": ${item.expression() || (item.children ? '' : null)}`;
+              if (items.length > 1 && index < items.length - 1) {
+                filterStr = `${filterStr}  ${item.context? item.context : '' }({`;
+                filterStr = `${filterStr} ${buildExpressionStr(items, index +1)}`;
+                filterStr = `${filterStr} })`;
+              }
             }
+            return filterStr;
+          };
 
-            if (i < itemsInPath.length -1 ) {
-             
-              filterStr = `${filterStr}  ${item.context? item.context : '' }({`;
-              closeParentGroup = true;
-            } 
-            
-          }
-
+          let filterStr = `{ "${this.rootNode()}": {`;
+          filterStr = `${filterStr} ${buildExpressionStr(itemsInPath, 0)}`;
           filterStr = `${filterStr} }}`;
 
+          const payloadObject = JSON.parse(this._payloadForValidation);
           const result = await jq.promised.json(payloadObject, filterStr);
 
           return result;
