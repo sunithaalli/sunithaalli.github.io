@@ -1,0 +1,224 @@
+{
+    "name" : "mapper",
+    "description" : "A Resuable jet mapper",
+    "version" : "1.0.0",
+    "jetVersion" : "8.3.0",
+    "properties":{
+        "stateId":{
+                "description":"The state id for rest api.",
+                "type":"string"
+        },
+        "integrationId":{
+            "description":"The id of the integration that the mapper is working with.",
+            "type":"string"
+        },
+        "workspaceId":{
+            "description":"The id of the workspace in the integration that mapper is working with.",
+            "type":"string"
+        },
+        "readOnlyMapper":{
+            "description":"Tells if the mapper is in non editable mode.",
+            "type":"boolean"
+        },
+        "xslUri":{
+            "description":"The xsl uri.",
+            "type":"string"
+        },
+        "stateInfoUri":{
+            "description":"The state info uri.",
+            "type":"string"
+        },
+       "mode":{
+            "description":"The JET Mapper mode customization or normal",
+            "type":"string"
+        },
+        "customFunctions" : {
+            "description" : "List of custom functions.",
+            "type" : "array",
+            "properties" : {
+                "name" : {
+                    "description" : "name of the function.",
+                    "type" : "string"
+                },
+                "description" : {
+                    "description" : "The description of the function",
+                    "type" : "string"
+                },
+                "helpURL" : {
+                    "description" : "The help URL for the function",
+                    "type" : "string"
+                },
+                "namespaceURL" : {
+                    "description" : "The function namespace",
+                    "type" : "string"
+                },
+                "category" : {
+                    "description" : "The function category",
+                    "type" : "String"
+                },
+                "returnType" : {
+                    "description" : "The function return type",
+                    "type" : "String"
+                },
+                "signature" : {
+                    "description" : "The function signature",
+                    "type" : "String"
+                },
+                "preferredPrefix" : {
+                    "description" : "The function preferred Prefix",
+                    "type" : "String"
+                },
+                "parameterList" : {
+                    "description" : "The list of parameter for the function",
+                    "type" : "array",
+                    "properties" : {
+                        "name" : {
+                            "description" : "The name for the parameter",
+                            "type" : "string"
+                        },
+                        "description" : {
+                            "description" : "The description for the parameter",
+                            "type" : "string"
+                        },
+                        "isRequired" : {
+                            "description" : "Is the param is required ?",
+                            "type" : "boolean"
+                        },
+                        "isRepeatable" : {
+                            "description" : "Is it is a repeating param ?",
+                            "type" : "boolean"
+                        },
+                        "dataType" : {
+                            "description" : "The data type of the param",
+                            "type" : "string"
+                        }
+                    }
+                }
+            }
+        },
+        "sourceRootElementUserFriendlyDetails" : {
+            "description" : "User friendly attributes of the root element of every source rendered in the Source Tree of Mapper UI. Each object in this list represents a root element of a source",
+            "type" : "array",
+            "properties" : {
+                "sourceName" : {
+                    "description" : "For secondary source pass the value of the param/source name. For primary source, pass the source name as '/'",
+                    "type" : "string"
+                },
+                "rootElementUserFriendlyDetails" : {
+                    "description" : "User friendly attributes like user friendly name, icon for the root element of the source",
+                    "type" : "object",
+                    "properties" : {
+                        "rootElementUserFriendlyName" : {
+                            "description" : "The user friendly name for the root element in the format: <Action Name> <space> <Request/Response/Fault> <space>  <Associated Adapter Name>",
+                            "type" : "string"
+                        },
+                        "rootElementUserFriendlyIcon" : {
+                            "description" : "Icon corresponding to the adapter associated. Relative Path to the image file of the icon (relative to the base url)",
+                            "type" : "string"
+                        }
+                    }
+                }
+            }
+        },
+        "targetRootElementUserFriendlyDetails" : {
+            "description" : "User friendly attributes like user friendly name, icon for the root element of the target",
+            "type" : "object",
+            "properties" : {
+                "rootElementUserFriendlyName" : {
+                    "description" : "The user friendly name for the root element in the format: <Action Name> <space> <Request/Response/Fault> <space>  <Associated Adapter Name>",
+                    "type" : "string"
+                },
+                "rootElementUserFriendlyIcon" : {
+                    "description" : "Icon corresponding to the adapter associated. Relative Path to the image file of the icon (relative to the base url)",
+                    "type" : "string"
+                }
+            }
+        }
+            
+    },
+    "methods" : {
+        "saveChanges": {
+            "description": "Saves the xsl changes from mapper"
+        },
+        "isDirty": {
+            "description": "Returns if the mapper component is in a dirty state"
+        },
+        "selectTextRange" : {
+            "description": "Selects a range of text in the mapper expression area. Example usage: document.getElementById('JETMapper').selectTextRange('#xpath-text-area', 3, 10)",
+            "params": [
+                {
+                    "selector": {
+                        "description" : "Valid element selector (for e.g. '#textArea') on which to do the selectRange",
+                        "type" : "string"
+                    },
+                    "start": {
+                        "description" : "Start position for the selection range",
+                        "type" : "number"
+                    },
+                    "end": {
+                        "description" : "End position for the selection range",
+                        "type" : "number"
+                    }
+                }
+            ]
+        },
+        "simulateDragDrop" : {
+            "description": "Simulates Drag and Drop between a source and target element for automation. Example usage: document.getElementById('JETMapper').simulateDragDrop('#0_0_0_0', '#0_4_0_0_0-0')",
+            "params": [
+                {
+                    "srcSelector": {
+                        "description" : "Valid element selector (for e.g. '#0_0_0_0') of the source element to drag",
+                        "type" : "string"
+                    },
+                    "targetSelector": {
+                        "description" : "Valid element selector (for e.g. '#0_4_0_0_0-0') of the target element to drop to",
+                        "type" : "string"
+                    },
+                    "toMapping" : {
+                        "description" : "Flag indicating whether the operation is to a mapping",
+                        "type" : "boolean"
+                    },
+                    "insertMode": {
+                        "description" : "Mode of insert for DnD operation. Default is no insert, else it can be 'parent', 'child', 'sibling-before', 'sibling-after'",
+                        "type" : "string"
+                    }
+                }
+            ]
+        },
+        "simulateRightClickSelection" : {
+            "description": "Simulates a right context menu click operation for automation. Example usage: document.querySelector('#JETMapper').simulateRightClickSelection('#0_4_0_0_0', 'deleteNode', 'target')",
+            "params": [
+                {
+                    "selector": {
+                        "description" : "Valid element selector (for e.g. '#0_4_0_0_0-0') on which to simulate right click on",
+                        "type" : "string"
+                    },
+                    "menuId": {
+                        "description" : "Id of the menu to choose. For target tree it could be 'makeRoot', 'nodeInfo', 'setAttributeValues', 'createNode', 'deleteNode', 'repeatNode', 'deleteMapping', 'deleteChildren', 'recommend', 'extDataTypes'. For source tree it could be 'makeRoot', 'nodeInfo', 'extDataTypes'",
+                        "type" : "string"
+                    },
+                    "treeType": {
+                        "description" : "Tree type to invoke the right click selection on; 'source' or 'target'",
+                        "type" : "string"
+                    }
+                }
+            ]
+        },
+        "getRecommendData" : {
+            "description": "Provides access to the recommend data for use with automation. Example usage: document.querySelector('#JETMapper').getRecommendData()",
+            "params": [
+            ]
+        },
+        "simulateShowMappingRecommendationPopUp" : {
+            "description": "Simulates the action to open the mapping recommendation popUp for use with automation. Example usage: document.querySelector('#JETMapper').simulateShowMappingRecommendationPopUp({targetLabelPath:'/execute/TemplateParameters/SubscriptionProductPUID', xsltTargetIndexPath: '0_5_0_0_0'})",
+            "params": [
+                {
+                    "targetPath": {
+                        "description": "TargetPath",
+                        "type": "object"
+                    }
+                }
+            ]
+        }
+    }
+}

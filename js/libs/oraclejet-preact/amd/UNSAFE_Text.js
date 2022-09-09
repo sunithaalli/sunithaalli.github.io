@@ -1,0 +1,2 @@
+define(["exports","./Text-559267eb","./tslib.es6-44d49373","preact/jsx-runtime",'css!./UNSAFE_Text.css',"./utils/UNSAFE_mergeInterpolations","./utils/UNSAFE_classNames","./classNames-b3be51c1","./_curry1-f1c75636","./_curry2-63a708f9","./_has-491b2156"],(function(e,s,t,r,a,i,c,l,u,n,_){"use strict";e.Text=s.Text,Object.defineProperty(e,"__esModule",{value:!0})}));
+//# sourceMappingURL=UNSAFE_Text.js.map

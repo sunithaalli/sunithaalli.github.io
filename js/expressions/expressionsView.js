@@ -10,74 +10,6 @@ define([
   'ojs/ojtreeview'],
     (ko, ArrayTreeDataProvider, ojkeyset, ExpressionsViewHtml, jsonpath) => {
       
-      const mockExpressions = [
-        {
-          id: 'e1',
-          name: 'foo',
-          expression: '.x.y',
-        },
-        {
-          id: 'e2',
-          name: 'soo',
-          expression: '"new value"',
-        },
-        {
-          id: 'e3',
-          name: 'bar',
-          expression: '.z',
-          context: ' | map',
-          children: [{
-            id: 'e3:1',
-            name: 'newcomment',
-            expression: '.comments',
-          },
-          {
-            id: 'e3_2',
-            name: 'newTitle',
-            expression: '.title',
-          }]
-        },
-      ];
-
-      const mockSchemaExpressions = [
-        {
-          id: 'e1',
-          name: 'id',
-          expression: '.["request-wrapper"].orderId',
-        },
-        {
-          id: 'e2',
-          name: 'title',
-          expression: '.["request-wrapper"].orderName',
-        },
-        {
-          id: 'e3',
-          name: 'status',
-          expression: '.["request-wrapper"].orderStatus',
-        },
-        {
-          id: 'e4',
-          name: 'invoices',
-          expression: '.["request-wrapper"].billOfLines',
-          context: ' | map',
-          children: [{
-            id: 'e4_1',
-            name: 'invoiceId',
-            expression: '.billLineId',
-          },
-          {
-            id: 'e4_2',
-            name: 'usageQuantity',
-            expression: '.totalUsage',
-          },
-          {
-            id: 'e4_3',
-            name: 'invoiceDescription',
-            expression: '("Bill Id Number: " + .billLineId)',
-          }]
-        }
-      ];
-
       class ExpressionsView {
         /**
          * Creates the expression View UI model
@@ -89,8 +21,9 @@ define([
          * @param {ko.Binding} targetDragContextTypes data types for the drag context of the target node that is updated during drag and drop
          * @param {ko.Binding} sourceDragContextTypes data types for the drag context of the source node that is updated during drag and drop
          * @param {Array<*>} schemaExpressions data for expressions
+         * @param <string> rootNodeName 
          */
-        constructor (domContainer, schemaMode, sourceMappingMode, targetDragContext, sourceDragContext, targetDragContextTypes, sourceDragContextTypes, expressions = schemaMode() ? mockSchemaExpressions : mockExpressions) {
+        constructor (domContainer, schemaMode, sourceMappingMode, targetDragContext, sourceDragContext, targetDragContextTypes, sourceDragContextTypes, expressions = [], rootNodeName = '') {
           this.selectedTabItem = ko.observable('expression-list');
           this.expressionColumns=[
             {'headerText': 'Target Node', 'minWidth': '10.5rem', 'headerClassName': 'oj-sm-padding-6x-start', 'sortable': 'disabled'},
@@ -100,7 +33,7 @@ define([
     
           this.expressionsObservable = this.createNestedObservableArray(expressions);
           
-          this.rootNode = ko.observable('response-wrapper');
+          this.rootNode = ko.observable(rootNodeName);
           this.sourceMappingMode = sourceMappingMode;
 
           this.dropItemsTypes = sourceMappingMode() ? ['application/sourceschemanodes+json'] 
@@ -136,6 +69,10 @@ define([
           this.expressionItemAction = this._expressionItemAction.bind(this);
           this.expressionNameClick = this._expressionNameClick.bind(this);
           this.handlePopupKeyUp = this._handlePopupKeyUp.bind(this);
+          
+          this.handleDragOnEmptyDiv = this._handleDragOnEmptyDiv.bind(this);
+          this.handleDropOnEmptyDiv = this._handleDropOnEmptyDiv.bind(this);
+          
           this.expressionDetailVisible = ko.observable(false);
 
           ko.cleanNode(domContainer);
@@ -169,11 +106,34 @@ define([
 
                 // assign the parent Expression to child expressions so that it is easy to walk the heirarchy
                 newExpression.parent = parentExpression;
-                newExpression.name = ko.observable(newExpression.name);
+                newExpression.targetName = ko.observable(newExpression.targetName);
                 newExpression.expression = ko.observable(newExpression.expression);
 
                 return newExpression;
             }));
+        }
+
+        retrieveNestedExpressions(observableArray) {
+          return observableArray().map((expression) => {
+            const newExpression  = {...expression};
+            if (expression.children) {
+              newExpression.children = this.retrieveNestedExpressions(newExpression.children);
+            }
+
+            // remove cicular referenvce
+            delete newExpression.parent;
+            newExpression.targetName = newExpression.targetName();
+            newExpression.expression = newExpression.expression();
+            return newExpression;
+          });
+        }
+
+        /**
+         * 
+         * @returns the existing expression model as an array
+         */
+        getExpressionArray() {
+          return this.retrieveNestedExpressions(this.expressionsObservable);
         }
 
         /**
@@ -223,7 +183,7 @@ define([
           } else if (event.target.id === 'expressionDetailPopupOK') {
             this._expressionDetailPopupOK(this.editExpressionItemSavedRow);
           } else if (event.target.id === 'editExpressionItemNameOK') {
-            this.editNameRow.name(this.editRowItemName());
+            this.editNameRow.targetName(this.editRowItemName());
             document.getElementById('editExpressionItemNamePopup').close();
             this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
           }
@@ -242,7 +202,7 @@ define([
               document.getElementById('editExpressionItemNamePopup').close();
             }
             this.editNameRow = row;
-            this.editRowItemName (row.name());
+            this.editRowItemName (row.targetName());
             document.getElementById('editExpressionItemNamePopup').open(event.target);
           }
         }
@@ -257,7 +217,7 @@ define([
               this._addExpressionItem(this.addExpressionItemSavedRow);
               document.getElementById('addExpressionItemPopup').close();
             } else if (event.currentTarget.id === 'editExpressionItemNamePopup') {
-              this.editNameRow.name(this.editRowItemName());
+              this.editNameRow.targetName(this.editRowItemName());
               document.getElementById('editExpressionItemNamePopup').close();
             }
             this.domContainer.dispatchEvent(new Event('generateTargetJsonOutput', {}));
@@ -276,7 +236,7 @@ define([
             const children = parent?.children || this.expressionsObservable;
             const type = this.newExpressionItemType() !== 'default' ? this.newExpressionItemType() : undefined;
             const newNode = {
-              name: ko.observable(nodeName),
+              targetName: ko.observable(nodeName),
               id: `newnode${this.nextId++}`,
               type, 
               context: type === 'array' ? ' | map': undefined,
@@ -438,7 +398,7 @@ define([
             let filterStr = '';
             if (index < items.length) {
               const item = items[index];
-              filterStr = `${filterStr}"${item.name()}": ${item.expression() || (item.children ? '' : null)}`;
+              filterStr = `${filterStr}"${item.targetName()}": ${item.expression() || (item.children ? '' : null)}`;
               if (items.length > 1 && index < items.length - 1) {
                 filterStr = `${filterStr}  ${item.context? item.context : '' }({`;
                 filterStr = `${filterStr} ${buildExpressionStr(items, index +1)}`;
@@ -448,9 +408,11 @@ define([
             return filterStr;
           };
 
-          let filterStr = `{ "${this.rootNode()}": {`;
+          const rootNode = this.rootNode();
+          // If we have a root node under which we are accumulating the output, generate it otherwise the output is as is
+          let filterStr = rootNode? `{ "${rootNode}": {` : '{';
           filterStr = `${filterStr} ${buildExpressionStr(itemsInPath, 0)}`;
-          filterStr = `${filterStr} }}`;
+          filterStr = `${filterStr} ${rootNode ? '}' : '' }}`;
 
           const payloadObject = JSON.parse(this._payloadForValidation);
           const result = await jq.promised.json(payloadObject, filterStr);
@@ -504,11 +466,15 @@ define([
           const parentContext = [];
           let parent = row.parent;
           while(parent) {
-            parentContext.unshift(parent.name());
+            parentContext.unshift(parent.targetName());
             parent = parent.parent;
           }
-          parentContext.unshift(this.rootNode());
-          const dropContext = jsonpath.stringify(parentContext);
+          const rootNode = this.rootNode();
+          if (rootNode) {
+            parentContext.unshift(rootNode);
+          }
+          
+          const dropContext = parentContext.length === 0 ? '$' : jsonpath.stringify(parentContext);
           return dropContext;
         }
 
@@ -522,7 +488,7 @@ define([
           const children = parent?.children() || this.expressionsObservable();
           for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (child.name() === dragItemTitle) {
+            if (child.targetName() === dragItemTitle) {
               return true;
             }
           }
@@ -546,11 +512,11 @@ define([
           const targetDragContext = this.targetDragContext();
           const index = targetDragContext.indexOf(dropContext);
 
-          if (targetDragContext !== this.rootNode && index !== -1){
+          if (targetDragContext !== this.rootNode() && index !== -1){
             // allow immediate chidren to be dropped inside a complex parent
             if (context.position === 'inside' && (row.type === 'object' || row.type === 'array')) {
               const dragHeirarchy = jsonpath.parse(targetDragContext);
-              if (dragHeirarchy.length > 1 && dragHeirarchy[dragHeirarchy.length - 2].expression.value === row.name) {
+              if (dragHeirarchy.length > 1 && dragHeirarchy[dragHeirarchy.length - 2].expression.value === row.targetName()) {
                 returnParams.isDropInside = true;
               }
             }
@@ -654,7 +620,7 @@ define([
           let type = relativeNodeTypes[relativeNodeTypes.length - 1].expression.value;
           const newNode = {
             id: `newnode${this.nextId++}`,
-            name: ko.observable(nodeName),
+            targetName: ko.observable(nodeName),
             type,
             parent: updatedRow,
             expression: ko.observable(type === 'array'? '[]': ''),
@@ -681,7 +647,7 @@ define([
           children.forEach((child) => {
             const newNode = {
               id: `newnode${this.nextId++}`,
-              name: ko.observable(child.title),
+              targetName: ko.observable(child.title),
               type: child.type,
               parent: node,
               expression: ko.observable(child.type === 'array'? '[]': ''),
@@ -715,7 +681,7 @@ define([
 
           const newNode = {
             id: `newnode${this.nextId++}`,
-            name: ko.observable(nodeName),
+            targetName: ko.observable(nodeName),
             type,
             parent: row.parent,
             expression: ko.observable(type === 'array'? '[]': ''),
@@ -777,48 +743,111 @@ define([
               this._handleDropInside(row, relativeNodeHeirarchy, relativeNodeTypes);
               return;
             }
+            this._buildChildrenFromNodeHeirarchy(relativeNodeHeirarchy, relativeNodeTypes, context.position === 'before', row.parent, row);
+          }
+        }
 
-            // declare function used for recursive insertion
-            const buildChildren = (relativeNodeHeirarchy, parent, row) => {
-              let nodeName = relativeNodeHeirarchy.splice(0, 1)[0].expression.value;
-              let type = relativeNodeTypes.splice(0, 1)[0].expression.value;
+        /**
+         * Internal function to create a heirarchy of expression from node heirarchy that is being dropped
+         * @param {Object} relativeNodeHeirarchy 
+         * @param {*} parent 
+         * @param {*} row 
+         */
+        _buildChildrenFromNodeHeirarchy(relativeNodeHeirarchy, relativeNodeTypes, isInsertBefore, parent, row){
+          let nodeName = relativeNodeHeirarchy.splice(0, 1)[0].expression.value;
+          let type = relativeNodeTypes.splice(0, 1)[0].expression.value;
+          const newNode = {
+            id: `newnode${this.nextId++}`,
+            targetName: ko.observable(nodeName),
+            type,
+            expression: ko.observable(type === 'array'? '[]': ''),
+            context: type === 'array' ? ' | map': undefined,
+          }
+
+          if (relativeNodeHeirarchy.length > 0) {
+            newNode.children = ko.observableArray([]);
+            // after the first level of insertion we are simply creating a single child node, So pass in null for the row
+            this._buildChildrenFromNodeHeirarchy(relativeNodeHeirarchy, relativeNodeTypes, isInsertBefore, newNode, null);
+          }
+
+          const children = parent?.children || this.expressionsObservable;
+          // at the first level of insertion use the row after which we are inserting
+          if ( row ) {
+            for (let c = 0; c < children().length; c++) {
+              const child = children()[c];
+              if (child.id === row.id) {
+                // for now insert after the node. We have use the flattened index and context.index 
+                // to determine before or after the node
+                children.splice( isInsertBefore ? c : c + 1, 0, newNode);
+                break;
+              }
+            }
+          } else {
+            // we are creating new children
+            children.push(newNode);
+          }
+
+          newNode.parent = parent;
+        }
+
+        /**
+         * Handle drop onto empty expression area
+         * @param {Event} event 
+         * @returns 
+         */
+         _handleDragOnEmptyDiv(event) {
+          const dataType = this.sourceMappingMode() ? 'application/sourceschemanodes+json': 'application/targetschemanodes+json';
+          if (event.dataTransfer.types.indexOf(dataType) !== -1) {
+            event.dataTransfer.dropEffect = "copy";
+            event.preventDefault();
+          }
+        }
+
+        /**
+         * Handle drop onto empty expression area
+         * @param {Event} event 
+         * @returns 
+         */
+        _handleDropOnEmptyDiv(event, context) {
+          const dataType = this.sourceMappingMode() ? 'application/sourceschemanodes+json': 'application/targetschemanodes+json';
+          const dragData = event.dataTransfer.getData(dataType);
+          if (dragData) {
+            // Drop from target
+            if (!this.sourceMappingMode()) {
+              // use the entire drag context and slice off the $ at the start
+              let nodeHeirarchy = jsonpath.parse(this.targetDragContext()).slice(1);
+              let nodeTypes = jsonpath.parse(this.targetDragContextTypes()).slice(1);
+              // remove the root node as well
+              if (nodeHeirarchy[0].expression.value === this.rootNode()) {
+                nodeHeirarchy = nodeHeirarchy.slice(1);
+                nodeTypes = nodeTypes.slice(1);
+              }
+              this._buildChildrenFromNodeHeirarchy(nodeHeirarchy, nodeTypes, false, null, null);
+            } else {
+              // drag from source
+              const dragDataObj = JSON.parse(dragData);
+              const dragNodeChildren = dragDataObj[0]?.children;
+              const dragHeirarchy = jsonpath.parse(this.sourceDragContext());
+              const nodeName = dragHeirarchy[dragHeirarchy.length - 1].expression.value;
+              const dragContextTypes = jsonpath.parse(this.sourceDragContextTypes());
+              const type = dragContextTypes[dragContextTypes.length - 1].expression.value;
+
               const newNode = {
                 id: `newnode${this.nextId++}`,
-                name: ko.observable(nodeName),
+                targetName: ko.observable(nodeName),
                 type,
                 expression: ko.observable(type === 'array'? '[]': ''),
                 context: type === 'array' ? ' | map': undefined,
               }
 
-              if (relativeNodeHeirarchy.length > 0) {
-                newNode.children = ko.observableArray([]);
-                // after the first level of insertion we are simply creating a single child node, So pass in null for the row
-                buildChildren(relativeNodeHeirarchy, newNode, null);
+              if (dragNodeChildren) {
+                this._createChildrenFromDragSource(newNode, dragNodeChildren);
               }
-
-              const children = parent?.children || this.expressionsObservable;
-              // at the first level of insertion use the row after which we are inserting
-              if ( row ) {
-                for (let c = 0; c < children().length; c++) {
-                  const child = children()[c];
-                  if (child.id === row.id) {
-                    // for now insert after the node. We have use the flattened index and context.index 
-                    // to determine before or after the node
-                    children.splice(context.position === 'before' ? c : c + 1, 0, newNode);
-                    break;
-                  }
-                }
-              } else {
-                // we are creating new children
-                children.push(newNode);
-              }
-
-              newNode.parent = parent;
+              this.expressionsObservable.push(newNode);
             }
-            buildChildren(relativeNodeHeirarchy, row.parent, row);
           }
         }
-
+        
         /**
          * DragOver expression detail
          * @param {*} event 
@@ -850,7 +879,8 @@ define([
 
             let sourceJsonPath = this.sourceDragContext();
             if (sourceJsonPath.startsWith('$')) {
-              sourceJsonPath = `.${sourceJsonPath.substring(1)}`;
+              sourceJsonPath = `${sourceJsonPath.substring(1)}`;
+              sourceJsonPath = !sourceJsonPath.startsWith('.') ? `.${sourceJsonPath}` : sourceJsonPath;
             }
             
             // check for the forEach use case by walking up the parent expression
@@ -910,14 +940,14 @@ define([
             event.preventDefault();
           }
         }
-
+        
         /**
          * Recursive function to generate expression from a list of expressions
          */
         generateStringFromExpressions(expressions) {
           let filterStr = ''
           expressions.forEach((item, index) => {
-            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.name()}": ${item.expression() || (item.children ? '' : null)}`;
+            filterStr = `${filterStr}${index > 0 ? ', ' : ''}"${item.targetName()}": ${item.expression() || (item.children ? '' : null)}`;
             if (item.children) {
               filterStr = `${filterStr} ${item.context? item.context + '(' : ''} {`;
               filterStr = `${filterStr} ${this.generateStringFromExpressions(item.children())}`;
@@ -933,9 +963,11 @@ define([
          * @returns Builds the JQ Expression used for test/runtime functionality
          */
         buildJQExpressionFilter() {
-          let filterStr = `{ "${this.rootNode()}": {`;
+          const rootNode = this.rootNode();
+          // If we have a root node under which we are accumulating the output, generate it otherwise the output is as is
+          let filterStr = rootNode? `{ "${rootNode}": {` : '{';
           filterStr = `${filterStr} ${this.generateStringFromExpressions(this.expressionsObservable())}`;
-          filterStr = `${filterStr} }}`;
+          filterStr = `${filterStr} ${rootNode ? '}' : '' }}`;
 
           this.generatedJQExpression = filterStr;
           return filterStr

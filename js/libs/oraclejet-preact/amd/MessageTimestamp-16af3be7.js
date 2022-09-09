@@ -1,0 +1,2 @@
+define(["exports","preact/jsx-runtime",'module',"./MessageFormattingUtils-1e3d660c"],(function(e,s,i,n){"use strict";const t={banner:"b1i0o3vp",inline:void 0};e.MessageTimestamp=function({value:e,variant:i="banner"}){const a=`oj-c-message${i}-timestamp ${t[i]}`,r=n.formatTimestamp(e);return s.jsx("div",Object.assign({class:a},{children:r}))}}));
+//# sourceMappingURL=MessageTimestamp-16af3be7.js.map

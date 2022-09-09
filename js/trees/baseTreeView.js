@@ -204,9 +204,15 @@ define([
               if(items['$$ref']) {
                 dataObj['$$ref'] = items['$$ref'];
               }
-              dataObj.children = [];
-              this.addPropertiesfromSchemaNodeToSchemaData(dataObj.children, items);
-              dataObj.children.forEach(child => child.parentId = dataObj.id);
+
+              // If we have a type for the items, It is an array of items like strings, numbers etc.
+              // Otherwise they are an array of literal objects
+              if (!items.type) {
+                dataObj.children = [];
+                this.addPropertiesfromSchemaNodeToSchemaData(dataObj.children, items);
+                dataObj.children.forEach(child => child.parentId = dataObj.id);
+              }
+              
             } else if (childNode.type == 'object') {
               // add reference property, in case it it useful
               if (childNode['$$ref']) {
@@ -231,29 +237,53 @@ define([
          */
         getTreeDataFromSwaggerEndpoint(swagger, rootPath) {
           // extract the title from the swagger file
-          const schemaTreeTitle = swagger.spec?.info?.title;
-          const schemaData = [];
+          let schemaTreeTitle = swagger.spec?.info?.title;
+          let schemaData = [];
           try {
             // TODO validate that the rootPath is correct and we get some elements
             const schemaNode = jsonpath.query(swagger.spec, rootPath, 1)[0];
             const rootKeys = jsonpath.parse(rootPath);
 
-            // remember the schema Node
-            this.schemaNode = schemaNode;
-            
             // Use the last part of jsonpath stripping out the root and the verb as root label
-            let rootLabel = schemaTreeTitle;
-
-            if (!rootLabel){
-              rootLabel = jsonpath.stringify(rootKeys.slice(rootKeys.length - 1)).substring(2);
-              if (rootLabel.startsWith('.')){
-                rootLabel = rootLabel.substring(1);
+            if (!schemaTreeTitle){
+              schemaTreeTitle = jsonpath.stringify(rootKeys.slice(rootKeys.length - 1)).substring(2);
+              if (schemaTreeTitle.startsWith('.')){
+                schemaTreeTitle = schemaTreeTitle.substring(1);
               }
             }
 
+            schemaData = this._loadTreeDataFromSchema(schemaNode, schemaTreeTitle);
+          } catch(e) {
+            console.error(`error parsing swagger: ${swagger}, rootPath: ${rootPath}.\n ${e}`)
+          }
+          return new ArrayTreeDataProvider(schemaData, {keyAttibutes: 'id'});
+        }
+
+        /**
+         * Converts json schema data into tree data format
+         * @param {Node} jsonSchema 
+         * @param {string} schemaTreeTitle title for the schema tree
+         * @returns 
+         */
+        getTreeDataFromSource(schemaNode, schemaTreeTitle) {
+          const schemaData = this._loadTreeDataFromSchema(schemaNode, schemaTreeTitle);
+          return new ArrayTreeDataProvider(schemaData, {keyAttibutes: 'id'});
+        }
+
+        /**
+         * Internal function to load the schema data used by Array Tree DP
+         * @param {Node} schemaNode 
+         * @param {*} schemaTreeTitle 
+         */
+        _loadTreeDataFromSchema(schemaNode, schemaTreeTitle){
+          const schemaData = [];
+          try {
+            // remember the schema Node
+            this.schemaNode = schemaNode;
+
             const dataObj = { 
-              id: rootLabel,
-              title: rootLabel
+              id: schemaTreeTitle,
+              title: schemaTreeTitle
             };
 
             dataObj.icon = 'oj-ux-ico-brackets';
@@ -272,9 +302,9 @@ define([
             this.addPropertiesfromSchemaNodeToSchemaData(dataObj.children, schemaItems);
             dataObj.children.forEach(child => child.parentId = dataObj.id);
           } catch(e) {
-            console.error(`error parsing swagger: ${swagger}, rootPath: ${rootPath}.\n ${e}`)
+            console.error(`Error parsing Schema Node: ${schemaNode}.\n ${e}`)
           }
-          return new ArrayTreeDataProvider(schemaData, {keyAttibutes: 'id'});
+          return schemaData;
         }
       }
 

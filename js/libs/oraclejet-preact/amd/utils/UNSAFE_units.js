@@ -1,0 +1,2 @@
+define(["exports","./UNSAFE_arrayUtils","./UNSAFE_stringUtils","../stringUtils-5947815e"],(function(e,t,r,s){"use strict";const i=(n=Number,e=>null!=e&&e.constructor===n||e instanceof n);var n;const a=e=>0===e||"0"===e,o=t.stringLiteralArray(["px","%","em","rem","vh","vw"]),l=new RegExp(`(${o.join("|")})$`),c=e=>s.isString(e)&&l.test(e),u=(N="px",e=>a(e)||c(e)||!(e=>!isNaN(parseFloat(e))&&!isNaN(e-0))(e)?e:e+N);var N;e.hasUnit=c,e.isNumber=i,e.isZero=a,e.px=u,Object.defineProperty(e,"__esModule",{value:!0})}));
+//# sourceMappingURL=UNSAFE_units.js.map

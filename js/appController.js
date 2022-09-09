@@ -37,6 +37,74 @@ define([
   function(
     JQLanguageDef, Context, ResponsiveUtils, ResponsiveKnockoutUtils, ko, SwaggerParser, SourceTreeView, TargetTreeView, ExpressionsView, splitPane) {
 
+      const mockExpressions = [
+        {
+          id: 'e1',
+          targetName: 'foo',
+          expression: '.x.y',
+        },
+        {
+          id: 'e2',
+          targetName: 'soo',
+          expression: '"new value"',
+        },
+        {
+          id: 'e3',
+          targetName: 'bar',
+          expression: '.z',
+          context: ' | map',
+          children: [{
+            id: 'e3:1',
+            targetName: 'newcomment',
+            expression: '.comments',
+          },
+          {
+            id: 'e3_2',
+            targetName: 'newTitle',
+            expression: '.title',
+          }]
+        },
+      ];
+
+      const mockSchemaExpressions = [
+        {
+          id: 'e1',
+          targetName: 'id',
+          expression: '.["request-wrapper"].orderId',
+        },
+        {
+          id: 'e2',
+          targetName: 'title',
+          expression: '.["request-wrapper"].orderName',
+        },
+        {
+          id: 'e3',
+          targetName: 'status',
+          expression: '.["request-wrapper"].orderStatus',
+        },
+        {
+          id: 'e4',
+          targetName: 'invoices',
+          expression: '.["request-wrapper"].billOfLines',
+          context: ' | map',
+          children: [{
+            id: 'e4_1',
+            targetName: 'invoiceId',
+            expression: '.billLineId',
+          },
+          {
+            id: 'e4_2',
+            targetName: 'usageQuantity',
+            expression: '.totalUsage',
+          },
+          {
+            id: 'e4_3',
+            targetName: 'invoiceDescription',
+            expression: '("Bill Id Number: " + .billLineId)',
+          }]
+        }
+      ];
+
      class ControllerViewModel {
       constructor() {
         // Media queries for repsonsive layouts
@@ -53,10 +121,6 @@ define([
         this.schemaMode = ko.observable(true);
         this.sourceMappingMode = ko.observable(false);
         this.swaggerParser = new SwaggerParser();
-
-        this.jqFilter1 = ko.observable('{foo: .x.y,  soo: "new value", bar: .z}');
-        this.jqFilter2 = ko.observable(`{ foo: .x.y,  soo: "new value", bar: .z | map( { "newcomment": .comments, "newTitle": .title})}`);
-        this.jqFilter3 = ko.observable(`{foo: .x.y | (if . == 8 then "eight" else "not eight" end),  soo: "new value", bar: .z}`);
 
         // register JQ Language definition with monaco
         this.registerJQLanguageDefinitionWithMonaco();
@@ -141,9 +205,10 @@ define([
         })
 
         this.initTrees();
+        const expressions = this.schemaMode() ? mockSchemaExpressions : mockExpressions
         const expressionsViewContainer = document.getElementById('expressionsViewContainer');
         this.expressionsView = new ExpressionsView(expressionsViewContainer, this.schemaMode, this.sourceMappingMode, 
-          this.targetDragContext, this.sourceDragContext, this.targetDragContextTypes, this.sourceDragContextTypes);
+          this.targetDragContext, this.sourceDragContext, this.targetDragContextTypes, this.sourceDragContextTypes, expressions);
         
         expressionsViewContainer.addEventListener('generateSourcePayload', async () => {
           this.sourceTreeView.generateJsonPayload();

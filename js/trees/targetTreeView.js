@@ -2,10 +2,11 @@ define([
   'knockout',
   './baseTreeView',
   '../monaco/monacoEditor',
-  'text!./view/targetTreeView.html'],
-    (ko, BaseTreeView, MonacoEditor, targetTreeViewHtml) => {
+  'text!./view/targetTreeView.html',
+  'ojs/ojarraytreedataprovider',],
+    (ko, BaseTreeView, MonacoEditor, targetTreeViewHtml, ArrayTreeDataProvider) => {
       class TargetTreeView extends BaseTreeView {
-        constructor (domContainer, schemaMode, sourceMappingMode, targetSwagger, rootPath) {
+        constructor (domContainer, schemaMode, sourceMappingMode, targetSwaggerOrJsonSchema, rootPath) {
           super(domContainer, targetTreeViewHtml, 'target-tree', schemaMode, 'application/targetschemanodes+json');
           this._outputJsonShapeless = ko.observable('{}');
           this.schemaTreeHeader = "Target";
@@ -15,7 +16,14 @@ define([
           if (!schemaMode()) {
             this.jsonTreeData = this.getTreeDataFromJsonBinding(this._outputJsonShapeless);
           } else {
-            this.schemaTreeData = this.getTreeDataFromSwaggerEndpoint(targetSwagger, rootPath);
+            if (!targetSwaggerOrJsonSchema) {
+              // dummy data for source Mode
+              this.schemaTreeData = new ArrayTreeDataProvider([], {keyAttibutes: 'id'});
+            } else {
+              this.schemaTreeData = rootPath ? this.getTreeDataFromSwaggerEndpoint(targetSwaggerOrJsonSchema, rootPath)
+                                    : this.getTreeDataFromSource(targetSwaggerOrJsonSchema, 'Target');
+            }
+            
             this.showTargetOutput.subscribe((value) => {
               if (value) {
                 window.setTimeout( () => {
@@ -23,6 +31,11 @@ define([
                 }, 100);
               }
             });
+
+            // initial display for source mapping mode
+            if (sourceMappingMode()) {
+              this._createTargetOutEditor();
+            }
 
             this._targetOutput.subscribe((newOutput) => {
               // If the monaco editor is already created update the value
@@ -47,6 +60,15 @@ define([
 
         get outputJsonShapelessBinding() {
           return this._outputJsonShapeless;
+        }
+
+        /**
+         * Creates the target output editor that displays the json output
+         */
+        _createTargetOutEditor() {
+          window.setTimeout( () => {
+            this.targetOutputMonacoEditor = MonacoEditor.setupEditor('target-output-monaco-container', this._targetOutput);
+          }, 100);
         }
 
         updateTargetShapelessOuput(jsonData) {

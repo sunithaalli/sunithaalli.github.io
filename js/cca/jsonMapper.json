@@ -1,0 +1,85 @@
+{
+  "name" : "oic-json-mapper",
+  "description" : "A Resuable json mapper",
+  "version" : "1.0.0",
+  "jetVersion" : "8.3.0",
+  "properties":{
+    "schemaMode":{
+        "description": "Whether the mapper is in the schema mode or shapeless mapping mode",
+        "type": "boolean",
+        "value": true
+    }, 
+    "sourceMappingMode": {
+        "description": "Whether the mapper needs only the source schema to generate the target output",
+        "type": "boolean",
+        "value": false
+    },
+    "initialSourceJson": {
+        "description": "When the mapper is in the (non) schema mode (i.e. shapeless mode) the source json used to create the mapping",
+        "type":"string"
+    },
+    "sourceSwaggerOrSchema": {
+        "description": "Swagger file content for the source schema used for mapping",
+        "type":"string"
+    },
+    "sourceRootPath": {
+        "description": "Json Path for the source root node in the source swagger file",
+        "type":"string"
+    },
+    "targetSwaggerOrSchema": {
+        "description": "Swagger file content for the target schema used for mapping. The target schema is used only when schemaMode=true and when sourceMappingMode=false",
+        "type":"string"
+    },
+    "targetRootPath": {
+        "description": "Json Path for the target root node in the target swagger file",
+        "type":"string",
+        "writeback": true
+    },
+    "expressionModel" : {
+        "description" : "Model defining Heirarchical list of expressions. The model will be updated as jqexpressions",
+        "type" : "Array<Object>",
+        "writeback": true,
+        "properties" : {
+            "id" : {
+                "description" : "unique identifier for the expression.",
+                "type" : "string"
+            },
+            "name" : {
+                "description" : "Name of the target property for which the expression is defined",
+                "type" : "string"
+            },
+            "context" : {
+                "description" : "Context used to map the parent node so that the child expressions can be mapped relative to the parent. For e.g. for Arrays you can use '| map()' to map each element in the parent and then child nodes can be mapped relative to the parent",
+                "type" : "string"
+            },
+            "expression" : {
+                "description" : "JQExpression mapping for the element",
+                "type" : "string"
+            },
+            "children" : {
+                "description" : "Child expressions under that parent element",
+                "type" : "Array<Object>"
+            }
+        }
+    },
+    "expressionRootNodeName" : {
+        "description": "Name of the root Node for expression",
+        "type":"string",
+        "value": "response-wrapper",
+        "writeback": true
+    },
+    "outputJQExpression": {
+        "description": "Generated output JQ Filter for transforming the source JSON to the target JSON. This is the runtime artifact created by the JSON Mapper",
+        "type":"string",
+        "writeback": true
+    }
+  },
+  "methods" : {
+      "saveChanges": {
+          "description": "Saves the  changes from mapper"
+      },
+      "isDirty": {
+          "description": "Returns if the mapper component is in a dirty state"
+      }
+  }
+}

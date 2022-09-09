@@ -27,7 +27,7 @@
 <html lang="en-us">
 
 <head>
-  <title>JQ Test</title>
+  <title>CCA with JQ Test Harness</title>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1">
@@ -35,89 +35,118 @@
 
   <!-- This is the main css file for the default theme -->
 <!-- injector:theme -->
-<link rel="stylesheet" href="css/redwood/12.1.3/web/redwood.css" id="basestyles" />
+<link rel="stylesheet" href="css/redwood/13.0.2/web/redwood.css" id="basestyles" />
+<link rel="stylesheet" href="css/theme-redwood/13.0.2/web/theme.css" id="themestyle" />
 <!-- endinjector -->
   <!-- This contains icon fonts used by the starter template -->
-  <link rel="stylesheet" href="css/demo-alta-site-min.css" type="text/css"/>
   <link rel="stylesheet" id="uxiconFont" href="https://static.oracle.com/cdn/fnd/gallery/2204.1.0/images/iconfont/ojuxIconFont.min.css">
-
-  <!-- This is where you would add any app specific styling -->
-  <link rel="stylesheet" href="css/app.css" type="text/css" />
-
-  <!-- Used by the json viewer-->
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
-  <link rel="stylesheet" href="css/jsonview.css" type="text/css" />
-
 </head>
 
 <body class="oj-web-applayout-body">
-  <div id="globalBody" class="oj-web-applayout-page">
-    <!--
-         ** Oracle JET V10.0.0 web application header pattern.
-         ** Please see the demos under Cookbook/Patterns/App Shell: Web
-         ** and the CSS documentation under Support/API Docs/Non-Component Styling
-         ** on the JET website for more information on how to use this pattern.
-      -->
-    <header role="banner" class="oj-web-applayout-header oj-bg-neutral-170 oj-color-invert">
-      <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
-        <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
-          <span role="img" class="oj-ux-ico-oracle oj-sm-margin-2x-end" title="Oracle Logo" alt="Oracle Logo"></span>
-          <h1 class="oj-sm-only-hide oj-web-applayout-header-title oj-text-color-primary" title="Application Name">
-            <oj-bind-text value="[[appName]]"></oj-bind-text>
-          </h1>
-        </div>
-        <div class="oj-flex-bar-end">
-          <!-- Responsive Toolbar -->
-          <oj-toolbar>
-            <oj-button id="addExpressionOK" chroming="full" class="oj-button-sm oj-sm-margin-2x-end" on-oj-action="[[showGeneratedJQ]]">
-              show Generated JQ
-            </oj-button>
-            <oj-switch id="toggle-src-mapping-mode" class="oj-sm-margin-2x-end" value="{{ sourceMappingMode }}"></oj-switch>
-            <oj-label for="toggle-src-mapping-mode" class="oj-sm-margin-4x-end">Source Mapping Mode</oj-label>
-
-            <oj-switch id="toggle-schema-mode" class="oj-sm-margin-2x-end" value="{{ schemaMode }}"></oj-switch>
-            <oj-label for="toggle-schema-mode">Switch To Schema Model</oj-label>
-            <oj-menu-button id="userMenu" display="[[smScreen() ? 'icons' : 'all']]" chroming="borderless">
-              <span>
-                <oj-bind-text value="[[userLogin]]"></oj-bind-text>
-              </span>
-              <span slot="endIcon"
-                :class="[[{'oj-icon demo-appheader-avatar': smScreen(), 'oj-component-icon oj-button-menu-dropdown-icon': !smScreen()}]]"></span>
-              <oj-menu id="menu1" slot="menu">
-                <oj-option id="pref" value="pref">Preferences</oj-option>
-                <oj-option id="help" value="help">Help</oj-option>
-                <oj-option id="about" value="about">About</oj-option>
-                <oj-option id="out" value="out">Sign Out</oj-option>
-              </oj-menu>
-            </oj-menu-button>
-          </oj-toolbar>
-        </div>
-      </div>
-    </header>
-    <div role="main" class="oj-web-applayout-max-width oj-web-applayout-content oj-flex oj-sm-flex-direction-column oj-sm-flex-wrap-nowrap">
-      <div id="main-panels-top-container" class="oj-flex oj-flex-item oj-sm-flex-wrap-nowrap split split-vertical">
-        <div id="main-panels-top" style="width: 100%;">
-          <div id="inputTreeViewContainer" class="oj-flex-item oj-panel oj-bg-neutral-30 oj-flex split split-horizontal">
+    <div id="globalBody" class="oj-web-applayout-page">
+      <!--
+           ** Oracle JET V10.0.0 web application header pattern.
+           ** Please see the demos under Cookbook/Patterns/App Shell: Web
+           ** and the CSS documentation under Support/API Docs/Non-Component Styling
+           ** on the JET website for more information on how to use this pattern.
+        -->
+      <header role="banner" class="oj-web-applayout-header oj-bg-neutral-170 oj-color-invert">
+        <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
+          <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
+            <span role="img" class="oj-ux-ico-oracle oj-sm-margin-2x-end" title="Oracle Logo" alt="Oracle Logo"></span>
+            <h1 class="oj-sm-only-hide oj-web-applayout-header-title oj-text-color-primary" title="Application Name">
+              <oj-bind-text value="Oracle JSON mapper"></oj-bind-text>
+            </h1>
           </div>
-          <div id="expressionsViewContainer" class="oj-flex-item oj-panel oj-bg-neutral-30 oj-flex oj-sm-flex-direction-column split split-horizontal" style="overflow: auto">
-          </div>
-          <div id="outputTreeViewContainer"  class="oj-flex-item oj-panel oj-bg-neutral-30 oj-flex split split-horizontal">
+          <div class="oj-flex-bar-end">
+            <!-- Responsive Toolbar -->
+            <oj-toolbar>
+              <oj-bind-if test="[[showCCA()]]">
+                <oj-button id="backToTestHarness" chroming="full" class="oj-button-sm oj-sm-margin-2x-end" on-oj-action="[[toggleTestHarness]]">
+                  Back
+                </oj-button>
+              </oj-bind-if>
+              <oj-bind-if test="[[!showCCA()]]">
+                <oj-button id="goToCCA" chroming="full" class="oj-button-sm oj-sm-margin-2x-end" on-oj-action="[[toggleTestHarness]]">
+                  Json Mapper
+                </oj-button>
+              </oj-bind-if>
+            </oj-toolbar>
           </div>
         </div>
-      </div>
-      <oj-dialog
-      id="showGeneratedJQ"
-      dialog-title="Generated JQ Expression"
-      cancel-behavior="icon"
-      style="min-width: 800px;"
-      modality="modeless">
-      <div class="oj-flex">
-        <oj-text-area value="[[generatedJQFilter]]"  class="oj-flex-item oj-sm-flex-1" rows="6" placeholder="Generated JQ Filter">
-        </oj-text-area>
-      </div>
-    </oj-dialog>
-  </div>
-
+      </header>
+      <oj-bind-if test="[[!showCCA()]]">
+        <div class="oj-sm-margin-2x-start oj-flex oj-sm-flex-direction-column">
+          <div class="oj-panel oj-sm-margin-2x-bottom oj-flex oj-sm-flex-wrap-nowrap">
+            <div class="oj-flex-item" style="flex-grow: 0;">
+              <oj-switch id="toggle-schema-mode" class="oj-sm-margin-2x-end" label-hint="Schema Model"  value="{{ schemaMode }}"></oj-switch>
+              <oj-switch id="toggle-src-mapping-mode" class="oj-sm-margin-2x-end" label-hint="Source Mapping Mode" value="{{ sourceMappingMode }}"></oj-switch>
+              <oj-switch id="toggle-src-mapping-mode" class="oj-sm-margin-2x-end" label-hint="Swagger Or JSON Schema?" value="{{ swagger }}"></oj-switch>
+            </div>
+            <oj-input-text class="oj-flex-item" style="width: 300px" label-edge="inside" label-hint="Expression Root Node Name" value="{{expressionRootNode}}"></oj-input-text>
+          </div>
+          <div class="oj-flex oj-flex-item oj-border oj-panel">
+            <div class="oj-flex oj-flex-item oj-sm-flex-1 oj-sm-flex-direction-column oj-panel">
+              <div>
+                <h2 class="oj-typography-subheading-xs">Source Root Path</h2>
+              </div>
+              <div>
+                <oj-input-text
+                  class="oj-sm-margin-2x-bottom"
+                  label-edge="none"
+                  value="[[sourceRootPath]]">
+                </oj-input-text>
+              </div>
+              <div>
+                <h2 class="oj-typography-subheading-xs">Source Swagger Or JSON Schema</h2>
+              </div>
+              <div id="sourceSwaggerContent" class="oj-flex-item oj-sm-flex-1 oj-border" style="min-height:240px">
+              </div>
+            </div>
+            <div class="oj-flex oj-flex-item oj-sm-flex-1 oj-sm-flex-direction-column oj-panel oj-sm-margin-2x-start">
+              <div>
+                <h2 class="oj-typography-subheading-xs">Target Root Path</h2>
+              </div>
+              <div>
+                <oj-input-text
+                  label-edge="none"
+                  class="oj-sm-margin-2x-bottom"
+                  value="[[sourceRootPath]]">
+                </oj-input-text>
+              </div>
+              <div>
+                <h2 class="oj-typography-subheading-xs">Target Swagger Or JSON Schema</h2>
+              </div>
+              <div id="targetSwaggerContent" class="oj-flex-item oj-sm-flex-1 oj-border" style="min-height:240px">
+              </div>
+            </div>
+          </div>
+          <div class="oj-flex oj-flex-item oj-border oj-panel">
+            <div class="oj-flex oj-flex-item oj-sm-flex-1 oj-sm-flex-direction-column oj-panel">
+              <h2 class="oj-typography-subheading-xs">CCA Expression Model</h2>
+              <div class="oj-flex oj-flex-item oj-border" style="height:300px">
+                <div id="expressionModelJson" class="oj-flex-item oj-sm-flex-1" style="min-height:240px">
+                </div>
+              </div>
+            </div>
+            <div class="oj-flex oj-flex-item oj-sm-flex-1 oj-sm-flex-direction-column oj-panel oj-sm-margin-2x-start">
+              <h2 class="oj-typography-subheading-xs">CCA Output (JQ Expression)</h2>
+              <div class="oj-flex oj-flex-item">
+                <oj-text-area
+                    value="[[outputJQExpression]]"
+                    rows="14"></oj-text-area>
+              </div>
+            </div>
+          </div>
+        </div>
+      </oj-bind-if>
+      <oj-bind-if test="[[showCCA()]]">
+        <oic-json-mapper id="jsonSchemaMapper" schema-mode="[[schemaMode]]" source-mapping-mode="[[sourceMappingMode]]"
+                        source-swagger-or-schema="[[sourceSwaggerContent]]" target-swagger-or-schema="[[targetSwaggerContent]]"
+                        source-root-path="[[sourceRootPath]]" target-root-path="[[targetRootPath]]"
+                        expression-root-node-name="[[expressionRootNode]]" expression-model="[[expressionModel]]"></oic-json-mapper>
+      </oj-bind-if>
+    </div>
   <script type="text/javascript">
     // The "oj_whenReady" global variable enables a strategy that the busy context whenReady,
     // will implicitly add a busy state, until the application calls applicationBootstrapComplete
@@ -125,8 +154,7 @@
     window["oj_whenReady"] = true;
   </script>
   <script type="text/javascript" src="js/libs/require/require.js"></script>
-  <script type="text/javascript" src="js/main.js"></script>
-  <script type="text/javascript" src="js/jsonview.js"></script>
+  <script type="text/javascript" src="js/maincca.js"></script>
   <script src="/js/jq.wasm.js"></script>
 </body>
 

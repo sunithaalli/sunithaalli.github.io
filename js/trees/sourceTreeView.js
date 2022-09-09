@@ -20,7 +20,7 @@ define([
       }`), null, 2));
 
       class SourceTreeView extends BaseTreeView {
-        constructor (domContainer, schemaMode, sourceMappingMode, sourceSwagger, rootPath) {
+        constructor (domContainer, schemaMode, sourceMappingMode, sourceSwaggerOrJsonSchema, rootPath) {
           super(domContainer, sourceTreeViewHtml, 'source-tree', schemaMode, 'application/sourceschemanodes+json');
           this._inputJsonShapeless = mockInputJson; // use mock data for the time being
           
@@ -32,7 +32,8 @@ define([
             this.jsonTreeData = this.getTreeDataFromJsonBinding(this._inputJsonShapeless);
             MonacoEditor.setupEditor('json-payload-monaco-container', this._inputJsonShapeless);
           } else {
-            this.schemaTreeData = this.getTreeDataFromSwaggerEndpoint(sourceSwagger, rootPath);
+            this.schemaTreeData = rootPath ? this.getTreeDataFromSwaggerEndpoint(sourceSwaggerOrJsonSchema, rootPath)
+                                    : this.getTreeDataFromSource(sourceSwaggerOrJsonSchema, 'Source');
             this.showSourceSchemaPayload.subscribe((value) => {
               if (value) {
                 window.setTimeout( () => {
